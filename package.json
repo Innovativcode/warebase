@@ -15,6 +15,7 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
+    "prisma:push:accept": "prisma db push --accept-data-loss",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:seed:superadmin": "tsx prisma/seed-superadmin.ts",
     "start:staging": "NODE_ENV=staging npm run build && npm run prisma:push && npm run prisma:seed",
