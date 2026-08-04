@@ -19,6 +19,7 @@ import { usersRouter } from "@/modules/users/users.routes";
 import { auditRouter } from "@/modules/audit/audit.routes";
 import { notificationsRouter } from "@/modules/notifications/notifications.routes";
 import { approvalsRouter } from "@/modules/approvals/approvals.routes";
+import { permissionsRouter } from "@/modules/permissions/permissions.routes";
 
 export const createApp = () => {
   const app = express();
@@ -65,6 +66,7 @@ export const createApp = () => {
   app.use("/api/v1/audit-logs", auditRouter);
   app.use("/api/v1/notifications", notificationsRouter);
   app.use("/api/v1/approvals", approvalsRouter);
+  app.use("/api/v1/permissions", permissionsRouter);
 
   app.use(notFound);
   app.use(errorHandler);

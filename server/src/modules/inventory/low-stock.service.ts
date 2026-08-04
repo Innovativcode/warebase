@@ -32,10 +32,10 @@ export const findLowStockProducts = async (): Promise<LowStockCandidate[]> => {
   return products
     .map((product) => ({
       ...product,
-      totalOnHand: product.inventoryItems.reduce((sum, item) => sum + item.quantityOnHand, 0),
+      totalOnHand: product.inventoryItems.reduce((sum: number, item: { quantityOnHand: number }) => sum + item.quantityOnHand, 0),
     }))
     .filter((product) => product.totalOnHand <= product.reorderPoint)
-    .sort((a, b) => a.totalOnHand - a.reorderPoint - (b.totalOnHand - b.reorderPoint));
+    .sort((a: { totalOnHand: number; reorderPoint: number }, b: { totalOnHand: number; reorderPoint: number }) => a.totalOnHand - a.reorderPoint - (b.totalOnHand - b.reorderPoint));
 };
 
 export const evaluateLowStock = async () => {

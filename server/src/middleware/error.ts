@@ -5,7 +5,16 @@ import { ApiError } from "@/utils/http";
 
 const GENERIC_500 = "An unexpected error occurred. Please try again.";
 
-const prismaErrorMessage = (err: Prisma.PrismaClientKnownRequestError): { statusCode: number; message: string } => {
+type PrismaKnownError = {
+  code: string;
+  meta?: Record<string, unknown>;
+};
+
+const isPrismaKnownError = (err: unknown): err is PrismaKnownError => {
+  return typeof err === "object" && err !== null && "code" in err;
+};
+
+const prismaErrorMessage = (err: PrismaKnownError): { statusCode: number; message: string } => {
   switch (err.code) {
     case "P2002":
       return { statusCode: 409, message: "A record with that value already exists." };
@@ -27,11 +36,10 @@ const prismaErrorMessage = (err: Prisma.PrismaClientKnownRequestError): { status
   }
 };
 
-const isDatabaseUnavailable = (err: unknown): boolean =>
-  err instanceof Prisma.PrismaClientInitializationError ||
-  err instanceof Prisma.PrismaClientRustPanicError ||
-  (err instanceof Prisma.PrismaClientKnownRequestError &&
-    ["P1001", "P1002", "P1003", "P1017"].includes(err.code));
+const isDatabaseUnavailable = (err: unknown): boolean => {
+  if (!isPrismaKnownError(err)) return false;
+  return ["P1001", "P1002", "P1003", "P1017"].includes(err.code);
+};
 
 export const errorHandler = (
   err: unknown,
@@ -72,10 +80,10 @@ export const errorHandler = (
     return;
   }
 
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+  if (isPrismaKnownError(err)) {
     const mapped = prismaErrorMessage(err);
     if (mapped.statusCode >= 500) {
-      console.error(`[${requestId}] prisma error ${err.code}:`, err.message);
+      console.error(`[${requestId}] prisma error ${err.code}:`, err);
     }
     res.status(mapped.statusCode).json({
       success: false,

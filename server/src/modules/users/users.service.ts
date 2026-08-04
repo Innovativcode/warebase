@@ -1,18 +1,24 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/db/prisma";
 import { ApiError } from "@/utils/http";
-import { ROLE_RANK } from "@/middleware/permissions";
+import { ROLE_RANK, getUserPermissions } from "@/middleware/permissions";
 import { userCreateSchema, userPatchSchema } from "./users.schemas";
 
 const MANAGER_CREATABLE_ROLES = ["STAFF", "VIEWER"];
+
+const generatePublicIdentifier = (name: string): string => {
+  const sanitized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const random = Math.random().toString(36).substring(2, 8);
+  return `${sanitized}-${random}`;
+};
 
 export type UserActor = {
   id: string;
   role: string;
 };
 
-export const listUsers = async () =>
-  prisma.user.findMany({
+export const listUsers = async () => {
+  const users = await prisma.user.findMany({
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -24,6 +30,16 @@ export const listUsers = async () =>
       updatedAt: true,
     },
   });
+
+  const usersWithPermissions = await Promise.all(
+    users.map(async (user: { id: string; role: string; name: string; email: string; isActive: boolean; createdAt: Date; updatedAt: Date }) => {
+      const permissions = await getUserPermissions(user.id, user.role);
+      return { ...user, permissions };
+    })
+  );
+
+  return usersWithPermissions;
+};
 
 export const createUser = async (actor: UserActor, input: unknown) => {
   const payload = userCreateSchema.parse(input);
@@ -39,14 +55,16 @@ export const createUser = async (actor: UserActor, input: unknown) => {
   }
 
   const passwordHash = await bcrypt.hash(payload.password, 12);
+  const publicIdentifier = generatePublicIdentifier(payload.name);
 
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name: payload.name,
       email: payload.email,
       passwordHash,
       role: payload.role,
       isActive: payload.isActive,
+      publicIdentifier,
     },
     select: {
       id: true,
@@ -58,6 +76,10 @@ export const createUser = async (actor: UserActor, input: unknown) => {
       updatedAt: true,
     },
   });
+
+  const permissions = await getUserPermissions(user.id, user.role);
+
+  return { ...user, permissions };
 };
 
 export const updateUser = async (actor: UserActor, id: string, input: unknown) => {
@@ -89,7 +111,7 @@ export const updateUser = async (actor: UserActor, id: string, input: unknown) =
     }
   }
 
-  return prisma.user.update({
+  const updatedUser = await prisma.user.update({
     where: { id },
     data: {
       ...payload,
@@ -104,4 +126,8 @@ export const updateUser = async (actor: UserActor, id: string, input: unknown) =
       updatedAt: true,
     },
   });
+
+  const permissions = await getUserPermissions(updatedUser.id, updatedUser.role);
+
+  return { ...updatedUser, permissions };
 };
