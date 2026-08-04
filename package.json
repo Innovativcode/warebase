@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "server/dist/index.js",
   "scripts": {
     "dev": "concurrently -n web,api -c cyan,green \"npm run dev:web\" \"npm run dev:api\"",
     "dev:web": "next dev",
@@ -10,10 +11,14 @@
     "build": "npm run build:web && npm run build:api",
     "build:web": "next build",
     "build:api": "tsc -p server/tsconfig.json && tsc-alias -p server/tsconfig.json",
+    "start": "node server/dist/index.js",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed:superadmin": "tsx prisma/seed-superadmin.ts",
+    "start:staging": "NODE_ENV=staging npm run build && npm run prisma:push && npm run prisma:seed",
+    "start:prod": "NODE_ENV=production npm run build && npm run prisma:push"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -27,11 +32,21 @@
     "@radix-ui/react-select": "^2.3.5",
     "@radix-ui/react-slot": "^1.2.3",
     "@tanstack/react-table": "^8.21.3",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^24.2.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
     "@zxing/library": "^0.23.0",
+    "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -43,6 +58,8 @@
     "morgan": "^1.10.1",
     "next": "^15.5.22",
     "next-themes": "^0.4.6",
+    "postcss": "^8.5.6",
+    "prisma": "^6.13.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.82.0",
@@ -51,24 +68,11 @@
     "socket.io-client": "^4.8.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
-    "zod": "^4.0.17"
-  },
-  "devDependencies": {
-    "@types/cookie-parser": "^1.4.9",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/morgan": "^1.9.9",
-    "@types/node": "^24.2.0",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "autoprefixer": "^10.4.21",
-    "concurrently": "^9.2.1",
-    "postcss": "^8.5.6",
-    "prisma": "^6.13.0",
     "tailwindcss": "^3.4.17",
     "tsc-alias": "^1.8.13",
     "tsx": "^4.20.3",
-    "typescript": "^5.9.2"
-  }
+    "typescript": "^5.9.2",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {}
 }
