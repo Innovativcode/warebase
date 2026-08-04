@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WareBase — Brand Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#1B2A4A;
+    --indigo-deep:#151F38;
+    --amber:#E8A23D;
+    --amber-light:#F0B15C;
+    --slate:#5B6B79;
+    --mist:#EEF2F5;
+    --charcoal:#22262B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--mist);
+    color:var(--charcoal);
+  }
+  .page{max-width:960px;margin:0 auto;padding:64px 40px 100px;}
+  header{margin-bottom:72px;}
+  .kicker{
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:2px;
+    font-size:13px;
+    color:var(--slate);
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:56px;
+    margin:12px 0 8px;
+    font-weight:500;
+  }
+  h1 span{color:var(--indigo);font-weight:700;}
+  .sub{color:var(--slate);font-size:18px;max-width:520px;}
+
+  section{margin-bottom:64px;}
+  h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:24px;
+    font-weight:700;
+    color:var(--indigo);
+    border-bottom:2px solid var(--indigo);
+    padding-bottom:10px;
+    margin-bottom:28px;
+  }
+
+  .logo-row{display:flex;gap:24px;flex-wrap:wrap;}
+  .logo-card{
+    background:#fff;
+    border-radius:16px;
+    padding:28px;
+    flex:1;
+    min-width:280px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .logo-card.dark{background:var(--indigo-deep);}
+  .logo-card img{max-width:100%;height:auto;}
+  .caption{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--slate);
+    text-align:center;
+    margin-top:10px;
+  }
+
+  .swatches{display:flex;gap:16px;flex-wrap:wrap;}
+  .swatch{width:150px;}
+  .chip{height:90px;border-radius:12px;margin-bottom:10px;}
+  .swatch .name{font-weight:600;font-size:14px;}
+  .swatch .hex{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--slate);
+  }
+
+  .type-row{background:#fff;border-radius:16px;padding:32px;margin-bottom:16px;}
+  .type-row .label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:1.5px;
+    color:var(--slate);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .type-row .sample-display{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:700;}
+  .type-row .sample-body{font-family:'Inter',sans-serif;font-size:18px;color:var(--charcoal);}
+  .type-row .sample-mono{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--indigo);}
+
+  .taglines{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .tagline-card{
+    background:#fff;
+    border-radius:12px;
+    padding:20px 24px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px;
+  }
+  .tagline-card.primary{
+    background:var(--indigo);
+    color:#fff;
+    grid-column:1/-1;
+    font-size:26px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .tagline-card.primary .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    background:var(--amber);
+    color:var(--indigo-deep);
+    padding:4px 10px;
+    border-radius:20px;
+    font-weight:500;
+  }
+
+  .rules{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .rule-card{background:#fff;border-radius:16px;padding:24px;}
+  .rule-card h3{margin-top:0;font-family:'Space Grotesk',sans-serif;font-size:16px;}
+  .rule-card.do h3{color:#2E7D4F;}
+  .rule-card.dont h3{color:#B23B3B;}
+  .rule-card ul{margin:0;padding-left:20px;color:var(--slate);font-size:15px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="kicker">Brand Guide — v1</div>
+    <h1>Ware<span>Base</span></h1>
+    <p class="sub">The base layer for inventory that stays organized on its own — clear stock levels, clear locations, no spreadsheets required.</p>
+  </header>
+
+  <section>
+    <h2>Logo</h2>
+    <div class="logo-row">
+      <div class="logo-card">
+        <img src="warebase-logo-light.svg" alt="WareBase logo on light background">
+      </div>
+      <div class="logo-card dark">
+        <img src="warebase-logo-dark.svg" alt="WareBase logo on dark background">
+      </div>
+    </div>
+    <p class="caption">Use the light lockup on white or mist backgrounds. Use the dark lockup on indigo or photographic backgrounds. The icon alone (warebase-icon.svg) works for favicons and app tiles down to 24px.</p>
+  </section>
+
+  <section>
+    <h2>Color palette</h2>
+    <div class="swatches">
+      <div class="swatch">
+        <div class="chip" style="background:#1B2A4A;"></div>
+        <div class="name">Deep Indigo</div>
+        <div class="hex">#1B2A4A</div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#E8A23D;"></div>
+        <div class="name">Signal Amber</div>
+        <div class="hex">#E8A23D</div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#5B6B79;"></div>
+        <div class="name">Steel Slate</div>
+        <div class="hex">#5B6B79</div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#EEF2F5;border:1px solid #ddd;"></div>
+        <div class="name">Cool Mist</div>
+        <div class="hex">#EEF2F5</div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#22262B;"></div>
+        <div class="name">Charcoal</div>
+        <div class="hex">#22262B</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Typography</h2>
+    <div class="type-row">
+      <div class="label">Display — Space Grotesk</div>
+      <div class="sample-display">Stock clarity, built in.</div>
+    </div>
+    <div class="type-row">
+      <div class="label">Body — Inter</div>
+      <div class="sample-body">WareBase tracks every unit from the loading dock to the shelf, so your team always knows what's on hand and what needs reordering.</div>
+    </div>
+    <div class="type-row">
+      <div class="label">Utility / Data — IBM Plex Mono</div>
+      <div class="sample-mono">SKU-04821 · BIN A-14 · QTY 236 · REORDER AT 50</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tagline</h2>
+    <div class="taglines">
+      <div class="tagline-card primary">
+        Every item, in its place.
+        <span class="tag">PRIMARY</span>
+      </div>
+      <div class="tagline-card">Know what you have. Always.</div>
+      <div class="tagline-card">Your stock, sorted.</div>
+      <div class="tagline-card">Inventory, under control.</div>
+      <div class="tagline-card">The base layer for your stock.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Usage</h2>
+    <div class="rules">
+      <div class="rule-card do">
+        <h3>Do</h3>
+        <ul>
+          <li>Keep clear space around the icon equal to at least the height of one bar</li>
+          <li>Use amber sparingly, as an accent on the tallest bar or key CTAs</li>
+          <li>Set the mono typeface only for data, codes, or labels</li>
+        </ul>
+      </div>
+      <div class="rule-card dont">
+        <h3>Don't</h3>
+        <ul>
+          <li>Recolor the icon outside the approved palette</li>
+          <li>Stretch or skew the wordmark</li>
+          <li>Place the light lockup on backgrounds lighter than Cool Mist</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

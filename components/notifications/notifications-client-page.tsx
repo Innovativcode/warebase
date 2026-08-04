@@ -1,0 +1,169 @@
+"use client";
+
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeroPanel } from "@/components/layout/page-hero-panel";
+import { EmptyState } from "@/components/layout/empty-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
+import { apiFetch } from "@/lib/api";
+import type { NotificationRecord } from "@/lib/types";
+import { useNotifications } from "@/hooks/use-notifications";
+import notificationsAnimation from "@/assets/lottie/notifications.json";
+import { Bell, CheckCheck, CircleAlert, CircleCheckBig, CircleHelp, RefreshCw } from "lucide-react";
+import { InlineLoader } from "@/components/loader/warebase-loader";
+import { useRealtimeEvent } from "@/hooks/use-realtime";
+import { useRouter } from "next/navigation";
+
+const iconByTitle = (title: string) => {
+  if (/alert|expired|critical|failed/i.test(title)) return CircleAlert;
+  if (/complete|success|ready|received|updated/i.test(title)) return CircleCheckBig;
+  return CircleHelp;
+};
+
+export function NotificationsClientPage() {
+  const router = useRouter();
+  const { data, loading, error, refetch } = useNotifications(50);
+  const notifications = data?.data?.items ?? [];
+  const unreadCount = data?.data?.unreadCount ?? 0;
+
+  useRealtimeEvent("notification:new", refetch);
+  useRealtimeEvent("approval:decision", refetch);
+
+  const markRead = async (notification: NotificationRecord) => {
+    if (notification.isRead) return;
+    try {
+      await apiFetch(`/notifications/${notification.id}/read`, { method: "PATCH" });
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to mark notification as read");
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await apiFetch("/notifications/read-all", { method: "POST" });
+      toast.success("All notifications marked as read");
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to mark notifications as read");
+    }
+  };
+
+  return (
+    <AppShell title="Notifications" description="Follow alerts, approvals, and operational updates in one inbox.">
+      <PageHeroPanel
+        badge="Operational inbox"
+        title="Notifications"
+        description="Track low stock, approvals, and workflow updates without leaving the workspace."
+        note="Unread items stay visible until they are acknowledged."
+        animationData={notificationsAnimation}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="warning">{unreadCount} unread</Badge>
+            <Button variant="outline" onClick={refetch} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+            <Button onClick={markAllRead} disabled={!unreadCount} className="gap-2">
+              <CheckCheck className="h-4 w-4" />
+              Mark all read
+            </Button>
+          </div>
+        }
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Inbox</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <InlineLoader label="Loading notifications…" />
+          ) : error ? (
+            <EmptyState title="Unable to load notifications" description={error} icon={<Bell className="h-6 w-6" />} />
+          ) : notifications.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Notification</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {notifications.map((notification) => {
+                  const Icon = iconByTitle(notification.title);
+                  return (
+                    <TableRow key={notification.id}>
+                      <TableCell>
+                        <button
+                          type="button"
+                          className="flex items-start gap-3 text-left transition-colors hover:text-foreground"
+                          onClick={async () => {
+                            await markRead(notification);
+                            if (notification.href) {
+                              router.push(notification.href);
+                            }
+                          }}
+                        >
+                          <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
+                            <Icon className="h-[18px] w-[18px] stroke-[1.9]" />
+                          </span>
+                          <div>
+                            <div className="font-medium text-foreground">{notification.title}</div>
+                            <div className="text-xs text-muted-foreground">{notification.body}</div>
+                          </div>
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={notification.isRead ? "secondary" : "warning"}>
+                          {notification.isRead ? "Read" : "Unread"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{new Date(notification.createdAt).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              await markRead(notification);
+                            }}
+                            disabled={notification.isRead}
+                          >
+                            Mark read
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (notification.href) {
+                                router.push(notification.href);
+                              }
+                            }}
+                          >
+                            Open
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          ) : (
+            <EmptyState
+              title="No notifications"
+              description="Operational updates, alerts, and workflow messages will appear here."
+              icon={<Bell className="h-6 w-6" />}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </AppShell>
+  );
+}

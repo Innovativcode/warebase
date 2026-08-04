@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WareBase — Loader Component</title>
+<style>
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#EEF2F5;
+    font-family:Arial,sans-serif;
+  }
+
+  /* ===== Copy everything inside .warebase-loader (including this <style> block) into your project ===== */
+
+  .warebase-loader{
+    display:inline-flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:8px;
+    width:100px;
+    height:100px;
+    border-radius:22px;
+    background:#151F38;
+    padding:16px 14px;
+    box-sizing:border-box;
+  }
+  .warebase-loader .bar{
+    width:11px;
+    border-radius:2px;
+    transform-origin:bottom;
+    animation:warebase-pulse 1s ease-in-out infinite;
+  }
+  .warebase-loader .bar:nth-child(1){height:20px;background:#5B6B79;animation-delay:0s;}
+  .warebase-loader .bar:nth-child(2){height:30px;background:#EEF2F5;animation-delay:0.15s;}
+  .warebase-loader .bar:nth-child(3){height:42px;background:#F0B15C;animation-delay:0.3s;}
+
+  @keyframes warebase-pulse{
+    0%, 100% { transform:scaleY(0.55); }
+    50%      { transform:scaleY(1); }
+  }
+
+  /* Compact inline variant, e.g. for buttons or table rows */
+  .warebase-loader.compact{
+    width:auto;
+    height:auto;
+    background:transparent;
+    padding:0;
+    gap:4px;
+  }
+  .warebase-loader.compact .bar{ width:5px; }
+  .warebase-loader.compact .bar:nth-child(1){height:10px;}
+  .warebase-loader.compact .bar:nth-child(2){height:15px;}
+  .warebase-loader.compact .bar:nth-child(3){height:20px;}
+
+  /* ===== end copy ===== */
+
+  .demo-row{display:flex;gap:64px;align-items:center;}
+  .caption{margin-top:14px;text-align:center;font-size:13px;color:#5B6B79;font-family:monospace;letter-spacing:1px;}
+  .col{display:flex;flex-direction:column;align-items:center;}
+</style>
+</head>
+<body>
+
+  <div class="demo-row">
+    <div class="col">
+      <div class="warebase-loader">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <div class="caption">DEFAULT</div>
+    </div>
+
+    <div class="col">
+      <div class="warebase-loader compact">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <div class="caption">COMPACT / INLINE</div>
+    </div>
+  </div>
+
+</body>
+</html>

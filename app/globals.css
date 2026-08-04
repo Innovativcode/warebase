@@ -1,0 +1,287 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url("/fonts/space-grotesk.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-500.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* WareBase brand palette */
+  --indigo: 221 46% 20%;
+  --indigo-deep: 223 45% 15%;
+  --amber: 35 79% 57%;
+  --amber-light: 34 83% 65%;
+  --steel-slate: 208 14% 42%;
+  --cool-mist: 206 3% 95%;
+  --charcoal: 213 5% 15%;
+
+  --background: var(--cool-mist);
+  --foreground: var(--charcoal);
+  --card: 0 0% 100%;
+  --card-foreground: var(--charcoal);
+  --popover: 0 0% 100%;
+  --popover-foreground: var(--charcoal);
+  --primary: var(--indigo);
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 12% 90%;
+  --secondary-foreground: var(--indigo);
+  --muted: 206 6% 92%;
+  --muted-foreground: var(--steel-slate);
+  --accent: 34 60% 94%;
+  --accent-foreground: 35 79% 42%;
+  --success: 148 48% 38%;
+  --success-foreground: 0 0% 100%;
+  --warning: var(--amber);
+  --warning-foreground: var(--indigo-deep);
+  --info: 207 70% 42%;
+  --info-foreground: 0 0% 100%;
+  --destructive: 0 68% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 208 10% 82%;
+  --input: 208 10% 82%;
+  --ring: var(--indigo);
+  --radius: 0.875rem;
+}
+
+html {
+  background: hsl(var(--background));
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+::selection {
+  background: rgba(232, 162, 61, 0.28);
+  color: hsl(var(--foreground));
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.surface-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Backwards-compatible alias: display font used across auth screens */
+.font-sora {
+  font-family: var(--font-display);
+}
+
+/* ===== WareBase loader ===== */
+
+.warebase-loader {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  width: 100px;
+  height: 100px;
+  border-radius: 22px;
+  background: hsl(var(--indigo-deep));
+  padding: 16px 14px;
+  box-sizing: border-box;
+}
+
+.warebase-loader .warebase-loader__bar {
+  display: block;
+  width: 11px;
+  border-radius: 2px;
+  transform-origin: bottom;
+  animation: warebase-pulse 1s ease-in-out infinite;
+}
+
+.warebase-loader .warebase-loader__bar:nth-child(1) {
+  height: 20px;
+  background: #5b6b79;
+  animation-delay: 0s;
+}
+
+.warebase-loader .warebase-loader__bar:nth-child(2) {
+  height: 30px;
+  background: #eef2f5;
+  animation-delay: 0.15s;
+}
+
+.warebase-loader .warebase-loader__bar:nth-child(3) {
+  height: 42px;
+  background: #f0b15c;
+  animation-delay: 0.3s;
+}
+
+@keyframes warebase-pulse {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.warebase-loader--compact {
+  width: auto;
+  height: auto;
+  background: transparent;
+  padding: 0;
+  gap: 4px;
+  border-radius: 0;
+}
+
+.warebase-loader--compact .warebase-loader__bar {
+  width: 5px;
+}
+
+.warebase-loader--compact .warebase-loader__bar:nth-child(1) {
+  height: 10px;
+}
+
+.warebase-loader--compact .warebase-loader__bar:nth-child(2) {
+  height: 15px;
+}
+
+.warebase-loader--compact .warebase-loader__bar:nth-child(3) {
+  height: 20px;
+}
+
+/* ===== WareBase boot screen ===== */
+
+.boot-screen {
+  background: #ffffff;
+}
+
+.boot-screen__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(21, 31, 56, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(21, 31, 56, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 45%, black 30%, transparent 100%);
+}
+
+.boot-screen__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 520px;
+  height: 520px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(232, 162, 61, 0.18) 0%, transparent 62%);
+  pointer-events: none;
+}
+
+.boot-screen__loader {
+  animation: boot-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.boot-screen__loader .warebase-loader {
+  box-shadow: 0 24px 60px rgba(21, 31, 56, 0.18);
+}
+
+.boot-screen__wordmark {
+  margin-top: 28px;
+  animation: boot-rise 0.9s 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.boot-screen__tagline {
+  margin-top: 10px;
+  animation: boot-rise 0.9s 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.boot-screen__message {
+  margin-top: 10px;
+  animation: boot-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.boot-screen__messages .boot-screen__message:nth-child(1) {
+  animation-delay: 0.85s;
+}
+
+.boot-screen__messages .boot-screen__message:nth-child(2) {
+  animation-delay: 1.15s;
+}
+
+.boot-screen__messages .boot-screen__message:nth-child(3) {
+  animation-delay: 1.45s;
+}
+
+@keyframes boot-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+    filter: blur(3px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warebase-loader .warebase-loader__bar,
+  .boot-screen__loader,
+  .boot-screen__wordmark,
+  .boot-screen__tagline,
+  .boot-screen__message {
+    animation: none;
+  }
+}
