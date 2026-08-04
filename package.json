@@ -18,7 +18,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:seed:superadmin": "tsx prisma/seed-superadmin.ts",
     "start:staging": "NODE_ENV=staging npm run build && npm run prisma:push && npm run prisma:seed",
-    "start:prod": "NODE_ENV=production npm run build && npm run prisma:push"
+    "start:prod": "NODE_ENV=production npm run build && npm run prisma:push && npm run prisma:seed:superadmin"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
