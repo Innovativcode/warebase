@@ -3,6 +3,13 @@ import { PrismaClient, ProjectStatus, PurchaseOrderStatus, StockMovementType, Us
 
 const prisma = new PrismaClient();
 
+// Check environment - only seed in development or staging
+const nodeEnv = process.env.NODE_ENV || "development";
+if (nodeEnv === "production") {
+  console.log("Skipping seed in production environment.");
+  process.exit(0);
+}
+
 const adminPassword = "Admin#2026!";
 const managerPassword = "Manager#2026!";
 const staffPassword = "Staff#2026!";
@@ -26,6 +33,7 @@ async function main() {
       passwordHash: adminHash,
       role: UserRole.ADMIN,
       isActive: true,
+      publicIdentifier: "admin-amin",
     },
   });
 
@@ -43,6 +51,7 @@ async function main() {
       passwordHash: managerHash,
       role: UserRole.MANAGER,
       isActive: true,
+      publicIdentifier: "manager-daniel",
     },
   });
 
@@ -60,6 +69,7 @@ async function main() {
       passwordHash: staffHash,
       role: UserRole.STAFF,
       isActive: true,
+      publicIdentifier: "staff-grace",
     },
   });
 

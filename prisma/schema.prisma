@@ -52,22 +52,30 @@ enum ApprovalStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         UserRole @default(STAFF)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String
+  email                 String   @unique
+  passwordHash          String
+  role                  UserRole @default(STAFF)
+  isActive              Boolean  @default(true)
+  publicIdentifier      String   @unique
+  businessId            String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  createdProjects Project[]       @relation("ProjectOwner")
-  assignedTasks   ProjectTask[]   @relation("TaskAssignee")
-  movements       StockMovement[]
-  purchaseOrders  PurchaseOrder[]  @relation("PurchaseOrderCreator")
-  requestedApprovals ApprovalRequest[] @relation("ApprovalRequestedBy")
-  reviewedApprovals  ApprovalRequest[] @relation("ApprovalReviewedBy")
-  notifications   Notification[]
+  business              Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  createdProjects       Project[] @relation("ProjectOwner")
+  assignedTasks         ProjectTask[] @relation("TaskAssignee")
+  movements             StockMovement[]
+  purchaseOrders        PurchaseOrder[] @relation("PurchaseOrderCreator")
+  requestedApprovals    ApprovalRequest[] @relation("ApprovalRequestedBy")
+  reviewedApprovals     ApprovalRequest[] @relation("ApprovalReviewedBy")
+  notifications         Notification[]
+  permissionOverrides   PermissionOverride[]
+
+  @@index([email])
+  @@index([businessId])
+  @@index([publicIdentifier])
 }
 
 model Warehouse {
@@ -76,20 +84,24 @@ model Warehouse {
   name        String
   location    String?
   isPrimary   Boolean  @default(false)
+  businessId  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  inventoryItems InventoryItem[]
-  outgoingMoves  StockMovement[] @relation("SourceWarehouse")
-  incomingMoves  StockMovement[] @relation("DestinationWarehouse")
+  business        Business?         @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  inventoryItems  InventoryItem[]
+  outgoingMoves   StockMovement[]   @relation("SourceWarehouse")
+  incomingMoves   StockMovement[]   @relation("DestinationWarehouse")
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  name       String    @unique
+  businessId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
+  business Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
   products Product[]
 }
 
@@ -100,9 +112,11 @@ model Supplier {
   email       String?
   phone       String?
   address     String?
+  businessId  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  business       Business?        @relation(fields: [businessId], references: [id], onDelete: SetNull)
   purchaseOrders PurchaseOrder[]
   products       Product[]
 }
@@ -119,9 +133,11 @@ model Product {
   isActive       Boolean   @default(true)
   categoryId     String?
   supplierId     String?
+  businessId     String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  business       Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
   category       Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   supplier       Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   inventoryItems InventoryItem[]
@@ -172,11 +188,13 @@ model Project {
   startDate   DateTime?
   dueDate     DateTime?
   ownerUserId String?
+  businessId  String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  owner User? @relation("ProjectOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
-  tasks ProjectTask[]
+  owner    User?      @relation("ProjectOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  business Business?  @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  tasks    ProjectTask[]
 }
 
 model ProjectTask {
@@ -197,20 +215,22 @@ model ProjectTask {
 }
 
 model PurchaseOrder {
-  id             String               @id @default(cuid())
-  orderNumber    String               @unique
-  supplierId     String?
-  status         PurchaseOrderStatus  @default(DRAFT)
-  orderedAt      DateTime?
-  expectedAt     DateTime?
-  receivedAt     DateTime?
-  notes          String?
+  id              String               @id @default(cuid())
+  orderNumber     String               @unique
+  supplierId      String?
+  status          PurchaseOrderStatus  @default(DRAFT)
+  orderedAt       DateTime?
+  expectedAt      DateTime?
+  receivedAt      DateTime?
+  notes           String?
   createdByUserId String?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  businessId      String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
-  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  createdBy  User?     @relation("PurchaseOrderCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  supplier   Supplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  createdBy  User?      @relation("PurchaseOrderCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  business   Business?  @relation(fields: [businessId], references: [id], onDelete: SetNull)
   lines      PurchaseOrderLine[]
 }
 
@@ -272,4 +292,41 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead, createdAt])
+}
+
+model PermissionOverride {
+  id         String   @id @default(cuid())
+  userId     String?
+  role       UserRole?
+  permission String
+  granted    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permission])
+  @@unique([role, permission])
+  @@index([userId])
+  @@index([role])
+}
+
+model Business {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  publicIdentifier String  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users           User[]
+  warehouses      Warehouse[]
+  products        Product[]
+  suppliers       Supplier[]
+  categories      Category[]
+  projects        Project[]
+  purchaseOrders  PurchaseOrder[]
+
+  @@index([slug])
+  @@index([publicIdentifier])
 }
