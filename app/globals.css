@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global button chrome cleanup: no borders or focus outlines. */
+button {
+  outline: none;
+  border-color: transparent;
+}
+
+button:focus,
+button:focus-visible {
+  outline: none;
+  box-shadow: none !important;
+}
+
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -79,6 +91,8 @@
 
 html {
   background: hsl(var(--background));
+  /* Reserve scrollbar space so fixed/centered overlays (boot screen, dialogs) don't shift horizontally. */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -262,18 +276,6 @@ body {
 .boot-screen__message {
   margin-top: 10px;
   animation: boot-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.boot-screen__messages .boot-screen__message:nth-child(1) {
-  animation-delay: 0.85s;
-}
-
-.boot-screen__messages .boot-screen__message:nth-child(2) {
-  animation-delay: 1.15s;
-}
-
-.boot-screen__messages .boot-screen__message:nth-child(3) {
-  animation-delay: 1.45s;
 }
 
 @keyframes boot-rise {

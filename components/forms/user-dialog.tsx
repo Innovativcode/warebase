@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 import { apiFetch, updateUserPermissions } from "@/lib/api";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,11 @@ export function UserDialog({ open, mode, user, onOpenChange, onSaved }: UserDial
         isActive: user.isActive,
         avatarUrl: user.avatarUrl ?? null,
       });
-      setPermissions(effectivePermissions(user));
+      setPermissions(
+        user.isSuperAdmin
+          ? Object.fromEntries(PERMISSION_LIST.map((capability) => [capability.key, true]))
+          : effectivePermissions(user),
+      );
       return;
     }
     setForm(emptyState);
@@ -83,8 +88,10 @@ export function UserDialog({ open, mode, user, onOpenChange, onSaved }: UserDial
 
   const title = useMemo(() => (mode === "create" ? "Create user" : "Edit user"), [mode]);
 
+  const superadminLocked = mode === "edit" && !!user?.isSuperAdmin;
+
   const savePermissionChanges = async () => {
-    if (mode !== "edit" || !user) {
+    if (mode !== "edit" || !user || user.isSuperAdmin) {
       return;
     }
 
@@ -150,6 +157,12 @@ export function UserDialog({ open, mode, user, onOpenChange, onSaved }: UserDial
   return (
     <Sheet open={open} title={title} description="Adjust profile, role, activation state, and permissions." onOpenChange={onOpenChange}>
       <form className="grid gap-4" onSubmit={handleSubmit}>
+        {superadminLocked ? (
+          <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+            <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Super admin role, status, and permissions are fixed and cannot be changed.</span>
+          </div>
+        ) : null}
         <ImageUpload value={form.avatarUrl} onChange={(avatarUrl) => updateField("avatarUrl", avatarUrl)} label="Profile image" maxDimension={512} />
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
@@ -169,7 +182,7 @@ export function UserDialog({ open, mode, user, onOpenChange, onSaved }: UserDial
         ) : null}
         <div className="space-y-2">
           <Label htmlFor="role">Role</Label>
-          <Select value={form.role} onValueChange={(value) => updateField("role", value as UserRecord["role"])}>
+          <Select value={form.role} onValueChange={(value) => updateField("role", value as UserRecord["role"])} disabled={superadminLocked}>
             <SelectTrigger id="role">
               <SelectValue />
             </SelectTrigger>
@@ -183,7 +196,12 @@ export function UserDialog({ open, mode, user, onOpenChange, onSaved }: UserDial
           </Select>
         </div>
         <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" checked={form.isActive} onChange={(event) => updateField("isActive", event.target.checked)} />
+          <input
+            type="checkbox"
+            checked={form.isActive}
+            onChange={(event) => updateField("isActive", event.target.checked)}
+            disabled={superadminLocked}
+          />
           Active account
         </label>
 
@@ -200,7 +218,9 @@ export function UserDialog({ open, mode, user, onOpenChange, onSaved }: UserDial
                 key={capability.key}
                 type="button"
                 onClick={() => togglePermission(capability.key)}
-                className="flex w-full items-center justify-between gap-3 rounded-lg border border-border/70 bg-background px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
+                disabled={superadminLocked}
+                title={superadminLocked ? "Fixed for super admin" : undefined}
+                className="flex w-full items-center justify-between gap-3 rounded-lg border border-border/70 bg-background px-3 py-2.5 text-left transition-colors hover:bg-muted/50 disabled:pointer-events-none disabled:opacity-60"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground">{capability.label}</p>

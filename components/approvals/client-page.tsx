@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
 import { EmptyState } from "@/components/layout/empty-state";
@@ -13,9 +13,11 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { ApprovalReviewSheet } from "@/components/approvals/approval-review-sheet";
 import { InlineLoader } from "@/components/loader/warebase-loader";
 import { apiFetch } from "@/lib/api";
+import { workspaceHref } from "@/lib/workspace";
 import type { ApprovalRecord } from "@/lib/types";
 import { useApprovals } from "@/hooks/use-approvals";
 import { useRealtimeEvent } from "@/hooks/use-realtime";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import approvalAnimation from "@/assets/lottie/approval.json";
 import {
   ArrowRightLeft,
@@ -59,10 +61,14 @@ const statusIcon = (status: ApprovalRecord["status"]) => {
 
 export function ApprovalsClientPage() {
   const router = useRouter();
+  const params = useParams<{ staffId?: string }>();
+  const { data: user } = useCurrentUser();
   const { data, loading, error, refetch } = useApprovals();
   const approvals = data?.data ?? [];
   const [selected, setSelected] = useState<ApprovalRecord | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  const staffId = params.staffId ?? user?.data?.publicIdentifier;
 
   useRealtimeEvent("approval:created", refetch);
   useRealtimeEvent("approval:reviewed", refetch);
@@ -179,7 +185,7 @@ export function ApprovalsClientPage() {
       className: "text-right",
       render: (approval) => (
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push(`/approvals/${approval.id}`)}>
+          <Button variant="outline" size="sm" onClick={() => router.push(workspaceHref(staffId, `/approvals/${approval.id}`))}>
             Details
           </Button>
           <Button variant="outline" size="sm" onClick={() => openApproval(approval)}>

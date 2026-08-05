@@ -1,7 +1,12 @@
 import { prisma } from "@/db/prisma";
 import { ApiError } from "@/utils/http";
 import { productSchema } from "./product.schemas";
-import { generateUniqueBarcode } from "./barcode.service";
+import {
+  ensureProductBarcode,
+  generateUniqueBarcode,
+  isBarcodeMissing,
+  normalizeBarcode,
+} from "./barcode.service";
 
 type ProductWithInventory = {
   id: string;
@@ -33,7 +38,19 @@ export const listProducts = async () => {
     select: PRODUCT_LIST_SELECT,
   });
 
-  return (products as ProductWithInventory[]).map(aggregateProduct);
+  const raw = products as ProductWithInventory[];
+
+  const withBarcodes = await Promise.all(
+    raw.map(async (product) => {
+      if (!isBarcodeMissing(product.barcode)) {
+        return product;
+      }
+      const barcode = await ensureProductBarcode(product.id, `${product.id}:${product.sku}`, product.barcode);
+      return { ...product, barcode };
+    }),
+  );
+
+  return withBarcodes.map(aggregateProduct);
 };
 
 const PRODUCT_BASE_SELECT = {
@@ -98,7 +115,14 @@ export const getProductById = async (id: string) => {
     throw new ApiError(404, "Product not found");
   }
 
-  return aggregateProduct(product as ProductWithInventory);
+  const raw = product as ProductWithInventory;
+
+  if (isBarcodeMissing(raw.barcode)) {
+    const barcode = await ensureProductBarcode(raw.id, `${raw.id}:${raw.sku}`, raw.barcode);
+    return aggregateProduct({ ...raw, barcode });
+  }
+
+  return aggregateProduct(raw);
 };
 
 export const getProductByBarcode = async (barcode: string) => {
@@ -116,7 +140,8 @@ export const getProductByBarcode = async (barcode: string) => {
 
 export const createProduct = async (input: unknown) => {
   const payload = productSchema.parse(input);
-  const barcode = payload.barcode ?? (await generateUniqueBarcode(`create:${payload.sku}`));
+  const barcode =
+    normalizeBarcode(payload.barcode) ?? (await generateUniqueBarcode(`create:${payload.sku}`));
 
   return prisma.product.create({
     data: {
@@ -148,7 +173,7 @@ export const updateProduct = async (id: string, input: unknown) => {
     data: {
       ...payload,
       description: payload.description === null ? null : payload.description ?? undefined,
-      barcode: payload.barcode === null ? null : payload.barcode ?? undefined,
+      barcode: payload.barcode === undefined ? undefined : normalizeBarcode(payload.barcode),
       categoryId: payload.categoryId === null ? null : payload.categoryId ?? undefined,
       supplierId: payload.supplierId === null ? null : payload.supplierId ?? undefined,
       imageUrl: payload.imageUrl === null ? null : payload.imageUrl ?? undefined,

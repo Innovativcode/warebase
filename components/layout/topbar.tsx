@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { CircleHelp, LogOut, Search, Plus, User2, Settings2, Keyboard, Mail } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { getPageMeta } from "@/lib/navigation";
+import { workspaceHref } from "@/lib/workspace";
 import { Button } from "@/components/ui/button";
 import { GlobalCommandMenu } from "@/components/layout/global-command-menu";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -30,11 +31,15 @@ type TopbarProps = {
 export function Topbar({ title, description }: TopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams<{ staffId?: string }>();
   const pageMeta = getPageMeta(pathname);
   const { data } = useCurrentUser();
   const [commandOpen, setCommandOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const staffId = params.staffId ?? data?.data?.publicIdentifier;
+  const settingsHref = workspaceHref(staffId, "/settings");
 
   const handleLogout = async () => {
     try {
@@ -89,7 +94,7 @@ export function Topbar({ title, description }: TopbarProps) {
                   <Keyboard className="mr-2 h-4 w-4" />
                   Keyboard shortcuts
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => window.location.assign("/settings")}>
+                <DropdownMenuItem onSelect={() => window.location.assign(settingsHref)}>
                   <Settings2 className="mr-2 h-4 w-4" />
                   Open settings
                 </DropdownMenuItem>
@@ -125,7 +130,7 @@ export function Topbar({ title, description }: TopbarProps) {
                   <User2 className="mr-2 h-4 w-4" />
                   Edit profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => router.push("/settings")}>
+                <DropdownMenuItem onSelect={() => router.push(settingsHref)}>
                   <Settings2 className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>

@@ -10,6 +10,7 @@ export type AuthenticatedRequest = Request & {
     role: string;
     email: string;
     name: string;
+    isSuperAdmin: boolean;
   };
 };
 
@@ -26,7 +27,7 @@ export const requireAuth = async (req: AuthenticatedRequest, _res: Response, nex
 
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
-      select: { id: true, name: true, email: true, role: true, isActive: true },
+      select: { id: true, name: true, email: true, role: true, isActive: true, isSuperAdmin: true },
     });
 
     if (!user || !user.isActive) {
@@ -39,6 +40,7 @@ export const requireAuth = async (req: AuthenticatedRequest, _res: Response, nex
       name: user.name,
       email: user.email,
       role: user.role,
+      isSuperAdmin: user.isSuperAdmin,
     };
 
     next();

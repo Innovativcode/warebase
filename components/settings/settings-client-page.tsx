@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/layout/empty-state";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Pencil, ShieldCheck, User2, ShieldAlert, ShieldCheck as ShieldCheckIcon, Clock3, FileClock, Plus, Check, Minus, Settings2 } from "lucide-react";
+import { Pencil, ShieldCheck, User2, ShieldAlert, ShieldCheck as ShieldCheckIcon, Clock3, FileClock, Plus, Check, Minus, Settings2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -207,6 +207,9 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
   };
 
   const getUserEffectivePermissions = (user: UserRecord) => {
+    if (user.isSuperAdmin) {
+      return PERMISSION_LIST.map((capability) => capability.key);
+    }
     const rolePerms = permissionMatrix[user.role] || [];
     return rolePerms;
   };
@@ -227,7 +230,15 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
             )}
           </span>
           <div>
-            <div className="font-medium text-foreground">{user.name}</div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground">{user.name}</span>
+              {user.isSuperAdmin ? (
+                <Badge variant="outline" className="gap-1 text-[0.65rem] font-semibold text-[#E8A23D]">
+                  <Lock className="h-3 w-3" />
+                  Super admin
+                </Badge>
+              ) : null}
+            </div>
             <div className="text-xs text-muted-foreground">{user.email}</div>
           </div>
         </div>
@@ -286,11 +297,23 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
       className: "text-right",
       render: (user) => (
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleEditUserPermissions(user)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEditUserPermissions(user)}
+            disabled={user.isSuperAdmin}
+            title={user.isSuperAdmin ? "Super admin permissions are fixed" : undefined}
+          >
             <Settings2 className="h-4 w-4" />
             Permissions
           </Button>
-          <Button variant="outline" size="sm" onClick={() => onEditUser(user)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEditUser(user)}
+            disabled={user.isSuperAdmin}
+            title={user.isSuperAdmin ? "Super admin cannot be edited" : undefined}
+          >
             <Pencil className="h-4 w-4" />
             Edit
           </Button>
@@ -401,7 +424,7 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
             <div>
               <CardTitle>Workspace</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                Set the currency used across the ledger, summaries, and charts. No currency is assumed when unset.
+                Set the currency used across the ledger, summaries, and charts. Defaults to Nigerian Naira (NGN) when unset.
               </p>
             </div>
             <Settings2 className="h-5 w-5 text-muted-foreground/60" />
@@ -419,7 +442,7 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
                   <SelectValue placeholder="Choose a currency" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__unset">Not set</SelectItem>
+                  <SelectItem value="__unset">Default (NGN)</SelectItem>
                   {CURRENCY_OPTIONS.map((currency) => (
                     <SelectItem key={currency.code} value={currency.code}>
                       {currency.label}
@@ -507,10 +530,17 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
         >
           {selectedUser && (
             <div className="space-y-3">
+              {selectedUser.isSuperAdmin ? (
+                <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+                  <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>Super admin users always have every permission. These cannot be changed.</span>
+                </div>
+              ) : null}
               {PERMISSION_LIST.map((capability) => {
+                const locked = selectedUser.isSuperAdmin;
                 const roleHasPermission = permissionMatrix[selectedUser.role]?.includes(capability.key) || false;
                 const userOverride = userPermissions[capability.key];
-                const effectiveGranted = userOverride !== undefined ? userOverride : roleHasPermission;
+                const effectiveGranted = locked ? true : userOverride !== undefined ? userOverride : roleHasPermission;
 
                 return (
                   <div key={capability.key} className="flex items-center justify-between rounded-lg border border-border p-4">
@@ -525,7 +555,9 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
                     </div>
                     <button
                       onClick={() => handleToggleUserPermission(capability.key)}
-                      className="ml-4 inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted"
+                      disabled={locked}
+                      title={locked ? "Fixed for super admin" : undefined}
+                      className="ml-4 inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted disabled:pointer-events-none"
                     >
                       {effectiveGranted ? (
                         <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">

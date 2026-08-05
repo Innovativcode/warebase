@@ -71,8 +71,11 @@ const PAGE_META: { path: string; title: string; description: string }[] = [
 ];
 
 export function getPageMeta(pathname: string): PageMeta {
+  const segments = pathname.split("/").filter(Boolean);
+  const candidate = segments.length > 1 ? `/${segments.slice(1).join("/")}` : pathname;
+
   const match = PAGE_META.filter(
-    (meta) => pathname === meta.path || pathname.startsWith(meta.path),
+    (meta) => candidate === meta.path || candidate.startsWith(meta.path),
   ).sort((a, b) => b.path.length - a.path.length)[0];
 
   return match ?? { title: "WareBase", description: "WareBase workspace" };

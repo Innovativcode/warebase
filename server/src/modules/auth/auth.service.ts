@@ -5,12 +5,7 @@ import { env } from "@/config/env";
 import { ApiError } from "@/utils/http";
 import { loginSchema, registerSchema, updateMeSchema } from "./auth.schemas";
 import { getUserPermissions } from "@/middleware/permissions";
-
-const generatePublicIdentifier = (name: string): string => {
-  const sanitized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const random = Math.random().toString(36).substring(2, 8);
-  return `${sanitized}-${random}`;
-};
+import { createUniquePublicIdentifier } from "@/utils/public-identifier";
 
 export const registerUser = async (input: unknown) => {
   const payload = registerSchema.parse(input);
@@ -21,7 +16,7 @@ export const registerUser = async (input: unknown) => {
   }
 
   const passwordHash = await bcrypt.hash(payload.password, 12);
-  const publicIdentifier = generatePublicIdentifier(payload.name);
+  const publicIdentifier = await createUniquePublicIdentifier(payload.name);
 
   const user = await prisma.user.create({
     data: {
@@ -37,7 +32,9 @@ export const registerUser = async (input: unknown) => {
       email: true,
       role: true,
       isActive: true,
+      isSuperAdmin: true,
       avatarUrl: true,
+      publicIdentifier: true,
       createdAt: true,
     },
   });
@@ -68,7 +65,9 @@ export const loginUser = async (input: unknown) => {
     email: user.email,
     role: user.role,
     isActive: user.isActive,
+    isSuperAdmin: user.isSuperAdmin,
     avatarUrl: user.avatarUrl,
+    publicIdentifier: user.publicIdentifier,
     permissions,
     createdAt: user.createdAt,
   });
@@ -83,7 +82,9 @@ export const getCurrentUser = async (userId: string) => {
       email: true,
       role: true,
       isActive: true,
+      isSuperAdmin: true,
       avatarUrl: true,
+      publicIdentifier: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -93,9 +94,19 @@ export const getCurrentUser = async (userId: string) => {
     throw new ApiError(404, "User not found");
   }
 
+  let publicIdentifier = user.publicIdentifier;
+
+  if (!publicIdentifier) {
+    publicIdentifier = await createUniquePublicIdentifier(user.name);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { publicIdentifier },
+    });
+  }
+
   const permissions = await getUserPermissions(user.id, user.role);
 
-  return { ...user, permissions };
+  return { ...user, publicIdentifier, permissions };
 };
 
 export const updateOwnProfile = async (userId: string, input: unknown) => {
@@ -113,7 +124,9 @@ export const updateOwnProfile = async (userId: string, input: unknown) => {
       email: true,
       role: true,
       isActive: true,
+      isSuperAdmin: true,
       avatarUrl: true,
+      publicIdentifier: true,
       createdAt: true,
       updatedAt: true,
     },

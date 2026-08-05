@@ -4,7 +4,10 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Command } from "cmdk";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Bell, Box, Plus, ScanBarcode, ShieldCheck } from "lucide-react";
+import { useParams } from "next/navigation";
 import { navigationGroups } from "@/lib/navigation";
+import { workspaceHref } from "@/lib/workspace";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -24,6 +27,10 @@ const quickActions = [
 
 export function GlobalCommandMenu({ open, onOpenChange }: CommandMenuProps) {
   const [search, setSearch] = useState("");
+  const params = useParams<{ staffId?: string }>();
+  const { data } = useCurrentUser();
+
+  const staffId = params.staffId ?? data?.data?.publicIdentifier;
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -41,7 +48,7 @@ export function GlobalCommandMenu({ open, onOpenChange }: CommandMenuProps) {
     const navItems = navigationGroups.flatMap((group) =>
       group.items.map((item) => ({
         label: item.label,
-        href: item.href,
+        href: workspaceHref(staffId, item.href),
         group: group.label,
         icon: item.icon,
       })),
@@ -50,12 +57,12 @@ export function GlobalCommandMenu({ open, onOpenChange }: CommandMenuProps) {
     const filteredNav = navItems.filter((item) =>
       `${item.label} ${item.group}`.toLowerCase().includes(search.toLowerCase()),
     );
-    const filteredQuick = quickActions.filter((item) =>
-      item.label.toLowerCase().includes(search.toLowerCase()),
-    );
+    const filteredQuick = quickActions
+      .map((item) => ({ ...item, href: workspaceHref(staffId, item.href) }))
+      .filter((item) => item.label.toLowerCase().includes(search.toLowerCase()));
 
     return { filteredNav, filteredQuick };
-  }, [search]);
+  }, [search, staffId]);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

@@ -14,7 +14,9 @@ import notificationsAnimation from "@/assets/lottie/notifications.json";
 import { Bell, CheckCheck, CircleAlert, CircleCheckBig, CircleHelp, RefreshCw } from "lucide-react";
 import { InlineLoader } from "@/components/loader/warebase-loader";
 import { useRealtimeEvent } from "@/hooks/use-realtime";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { workspaceHref } from "@/lib/workspace";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 const iconByTitle = (title: string) => {
   if (/alert|expired|critical|failed/i.test(title)) return CircleAlert;
@@ -24,9 +26,18 @@ const iconByTitle = (title: string) => {
 
 export function NotificationsClientPage() {
   const router = useRouter();
+  const params = useParams<{ staffId?: string }>();
+  const { data: user } = useCurrentUser();
   const { data, loading, error, refetch } = useNotifications(50);
   const notifications = data?.data?.items ?? [];
   const unreadCount = data?.data?.unreadCount ?? 0;
+
+  const staffId = params.staffId ?? user?.data?.publicIdentifier;
+
+  const openNotification = (href?: string | null) => {
+    if (!href) return;
+    router.push(workspaceHref(staffId, href));
+  };
 
   useRealtimeEvent("notification:new", refetch);
   useRealtimeEvent("approval:decision", refetch);
@@ -64,9 +75,7 @@ export function NotificationsClientPage() {
             className="flex items-start gap-3 text-left transition-colors hover:text-foreground"
             onClick={async () => {
               await markRead(notification);
-              if (notification.href) {
-                router.push(notification.href);
-              }
+              openNotification(notification.href);
             }}
           >
             <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
@@ -118,9 +127,7 @@ export function NotificationsClientPage() {
             variant="outline"
             size="sm"
             onClick={() => {
-              if (notification.href) {
-                router.push(notification.href);
-              }
+              openNotification(notification.href);
             }}
           >
             Open

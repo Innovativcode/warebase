@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
+import { markBootIntro } from "@/lib/boot-intro";
 import { LottiePlayer } from "@/components/media/lottie-player";
 import { WarebaseLogo } from "@/components/brand/warebase-logo";
 import successAnimation from "@/assets/lottie/success.json";
@@ -59,6 +60,7 @@ export function RegisterClientPage() {
         }),
       });
       toast.success("Account created successfully");
+      markBootIntro();
       router.replace("/onboarding/welcome");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to create account right now");

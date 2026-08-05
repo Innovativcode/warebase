@@ -21,14 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { TransactionDialog } from "@/components/accounting/transaction-dialog";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { useResource } from "@/hooks/use-resource";
+import { formatMoney } from "@/lib/currency";
 import type { AccountingSummary, ApiResult, TransactionRecord } from "@/lib/types";
 import automationAnimation from "@/assets/lottie/automation.json";
-
-const currencyFormatter = new Intl.NumberFormat(undefined, {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 type TransactionsState = {
   items: TransactionRecord[];
@@ -46,6 +41,7 @@ export function AccountingClientPage() {
     [transactionsData],
   );
 
+  const ledgerCurrency = summary?.currency ?? null;
   const netPositive = (summary?.totals.net ?? 0) >= 0;
 
   return (
@@ -60,7 +56,9 @@ export function AccountingClientPage() {
       />
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">All figures in USD. Book a transaction to keep the ledger current.</p>
+        <p className="text-sm text-muted-foreground">
+          All figures in {ledgerCurrency}. Book a transaction to keep the ledger current.
+        </p>
         <PermissionGate permission="accounting:manage">
           <Button onClick={() => setDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -72,7 +70,7 @@ export function AccountingClientPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Income"
-          value={summary ? currencyFormatter.format(summary.totals.income) : "$0"}
+          value={formatMoney(summary?.totals.income ?? 0, ledgerCurrency)}
           hint={`${summary?.totals.incomeCount ?? 0} income entries`}
           tone="success"
           iconClassName="bg-emerald-50 text-emerald-700"
@@ -80,7 +78,7 @@ export function AccountingClientPage() {
         />
         <StatCard
           label="Expenses"
-          value={summary ? currencyFormatter.format(summary.totals.expense) : "$0"}
+          value={formatMoney(summary?.totals.expense ?? 0, ledgerCurrency)}
           hint={`${summary?.totals.expenseCount ?? 0} expense entries`}
           tone="danger"
           iconClassName="bg-rose-50 text-rose-700"
@@ -88,7 +86,7 @@ export function AccountingClientPage() {
         />
         <StatCard
           label="Net cash flow"
-          value={summary ? currencyFormatter.format(summary.totals.net) : "$0"}
+          value={formatMoney(summary?.totals.net ?? 0, ledgerCurrency)}
           hint={netPositive ? "Running positive" : "Running negative"}
           iconClassName={netPositive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}
           icon={<TrendingUp className={`h-[18px] w-[18px] ${netPositive ? "text-emerald-700" : "text-rose-700"}`} />}
@@ -172,7 +170,7 @@ export function AccountingClientPage() {
                       <div className="text-right">
                         <p className={`text-sm font-semibold tabular-nums ${isIncome ? "text-emerald-700" : "text-rose-700"}`}>
                           {isIncome ? "+" : "−"}
-                          {currencyFormatter.format(Number(transaction.amount))}
+                          {formatMoney(Number(transaction.amount), ledgerCurrency)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(transaction.occurredAt).toLocaleDateString()}
@@ -224,7 +222,7 @@ export function AccountingClientPage() {
                     </span>
                     <span className={`text-sm font-semibold tabular-nums ${isIncome ? "text-emerald-700" : "text-rose-700"}`}>
                       {isIncome ? "+" : "−"}
-                      {currencyFormatter.format(Number(transaction.amount))}
+                      {formatMoney(Number(transaction.amount), ledgerCurrency)}
                     </span>
                   </div>
                 );

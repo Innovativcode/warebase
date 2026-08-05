@@ -7,6 +7,8 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Package, Pencil, Plus, ArrowUpDown, Box, CheckCircle2, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { workspaceHref } from "@/lib/workspace";
 import type { ProductRecord } from "@/lib/types";
 import { InlineLoader } from "@/components/loader/warebase-loader";
 import automationAnimation from "@/assets/lottie/automation.json";
@@ -21,6 +23,13 @@ type ProductsClientPageProps = {
 };
 
 export function ProductsClientPage({ products, loading, error, onCreate, onEdit, onDelete }: ProductsClientPageProps) {
+  const router = useRouter();
+  const params = useParams<{ staffId?: string }>();
+
+  const openProduct = (product: ProductRecord) => {
+    router.push(workspaceHref(params.staffId, `/products/${product.id}`));
+  };
+
   const columns: Column<ProductRecord>[] = [
     {
       key: "name",
@@ -37,7 +46,10 @@ export function ProductsClientPage({ products, loading, error, onCreate, onEdit,
             )}
           </span>
           <div>
-            <Link href={`/products/${product.id}`} className="font-medium text-foreground hover:underline">
+            <Link
+              href={workspaceHref(params.staffId, `/products/${product.id}`)}
+              className="font-medium text-foreground hover:underline"
+            >
               {product.name}
             </Link>
             <div className="text-xs text-muted-foreground">{product.sku}</div>
@@ -147,6 +159,7 @@ export function ProductsClientPage({ products, loading, error, onCreate, onEdit,
               columns={columns}
               keyExtractor={(product) => product.id}
               emptyMessage="No products created"
+              onRowClick={openProduct}
             />
           ) : (
             <EmptyState

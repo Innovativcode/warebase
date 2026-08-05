@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
 import { EmptyState } from "@/components/layout/empty-state";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { workspaceHref } from "@/lib/workspace";
 import { useApproval } from "@/hooks/use-approval";
 import { InlineLoader } from "@/components/loader/warebase-loader";
 import approvalAnimation from "@/assets/lottie/approval.json";
@@ -46,9 +47,12 @@ const typeIcon = (type: string) => {
 
 export function ApprovalDetailClientPage({ id }: ApprovalDetailClientPageProps) {
   const router = useRouter();
+  const params = useParams<{ staffId?: string }>();
   const { data, loading, error, refetch } = useApproval(id);
   const approval = data?.data ?? null;
   const [submitting, setSubmitting] = useState<"APPROVED" | "REJECTED" | "CHANGES_REQUESTED" | null>(null);
+
+  const backHref = workspaceHref(params.staffId, "/approvals");
 
   const handleDecision = async (status: "APPROVED" | "REJECTED" | "CHANGES_REQUESTED") => {
     if (!approval) return;
@@ -83,7 +87,7 @@ export function ApprovalDetailClientPage({ id }: ApprovalDetailClientPageProps) 
         animationData={approvalAnimation}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={() => router.push("/approvals")} className="gap-2">
+            <Button variant="outline" onClick={() => router.push(backHref)} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to approvals
             </Button>

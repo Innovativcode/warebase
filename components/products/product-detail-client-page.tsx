@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -23,6 +23,7 @@ import { useResource } from "@/hooks/use-resource";
 import { useSuppliers } from "@/hooks/use-suppliers";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { apiFetch, blockProduct, flagProduct, unblockProduct } from "@/lib/api";
+import { workspaceHref } from "@/lib/workspace";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,7 @@ export function ProductDetailClientPage({ id }: { id: string }) {
   const { data, loading, error, refetch } = useResource<ApiResult<ProductRecord>>(`/products/${id}`);
   const suppliers = useSuppliers();
   const { data: currentUser } = useCurrentUser();
+  const params = useParams<{ staffId?: string }>();
   const router = useRouter();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -46,6 +48,7 @@ export function ProductDetailClientPage({ id }: { id: string }) {
   const permissions = currentUser?.data?.permissions ?? [];
   const canWrite = permissions.includes("write");
   const canDelete = permissions.includes("delete");
+  const catalogHref = workspaceHref(params.staffId, "/products");
 
   const handleFlag = async () => {
     if (!product) return;
@@ -96,7 +99,7 @@ export function ProductDetailClientPage({ id }: { id: string }) {
     try {
       await apiFetch(`/products/${product.id}`, { method: "DELETE" });
       toast.success("Product deleted");
-      router.push("/products");
+      router.push(catalogHref);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Unable to delete product");
     } finally {
@@ -126,7 +129,7 @@ export function ProductDetailClientPage({ id }: { id: string }) {
     <>
       <div className="mb-4 flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground">
-          <Link href="/products">
+          <Link href={catalogHref}>
             <ArrowLeft className="h-4 w-4" />
             Back to catalog
           </Link>

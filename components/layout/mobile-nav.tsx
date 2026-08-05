@@ -3,14 +3,15 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import { useState } from "react";
-import { ChevronRight, LogOut, Menu, X } from "lucide-react";
+import { ChevronRight, LogOut, Menu, User2, X } from "lucide-react";
 import { toast } from "sonner";
 import { navigationGroups, NAV_TONES } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/cn";
 import { apiFetch } from "@/lib/api";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
+import { workspaceHref } from "@/lib/workspace";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { WarebaseIcon } from "@/components/brand/warebase-logo";
@@ -18,8 +19,11 @@ import { WarebaseIcon } from "@/components/brand/warebase-logo";
 export function MobileNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams<{ staffId?: string }>();
   const { data } = useCurrentUser();
   const [logoutOpen, setLogoutOpen] = useState(false);
+
+  const staffId = params.staffId ?? data?.data?.publicIdentifier;
 
   const handleLogout = async () => {
     try {
@@ -68,11 +72,12 @@ export function MobileNav() {
                   <div className="space-y-1">
                     {group.items.map((item) => {
                       const tone = NAV_TONES[item.tone];
-                      const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                      const href = workspaceHref(staffId, item.href);
+                      const active = pathname === href || pathname.startsWith(`${href}/`);
                       return (
                         <Link
                           key={item.href}
-                          href={item.href}
+                          href={href}
                           className={cn(
                             "flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 text-sm font-medium hover:bg-muted",
                             active ? "bg-background text-foreground" : "text-foreground",
@@ -100,8 +105,20 @@ export function MobileNav() {
             <Separator />
             <div className="p-4">
               <div className="rounded-[0.9rem] border border-border/70 bg-background p-3">
-                <p className="text-sm font-medium text-foreground">{data?.data?.name ?? "Signed in user"}</p>
-                <p className="text-xs text-muted-foreground">{data?.data?.email ?? "Workspace member"}</p>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-background text-foreground/80">
+                    {data?.data?.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={data.data.avatarUrl} alt={data.data.name ?? "User"} className="h-full w-full object-cover" />
+                    ) : (
+                      <User2 className="h-[20px] w-[20px] stroke-[2.1]" />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{data?.data?.name ?? "Signed in user"}</p>
+                    <p className="truncate text-xs text-muted-foreground">{data?.data?.email ?? "Workspace member"}</p>
+                  </div>
+                </div>
                 <Button variant="outline" className="mt-3 w-full" onClick={() => setLogoutOpen(true)}>
                   <LogOut className="h-[20px] w-[20px] stroke-[2.3]" />
                   Sign out

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,9 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
+import { markBootIntro } from "@/lib/boot-intro";
 import { LottiePlayer } from "@/components/media/lottie-player";
 import { WarebaseLogo } from "@/components/brand/warebase-logo";
-import { SessionLoader } from "@/components/loader/session-loader";
 import { WarebaseLoader } from "@/components/loader/warebase-loader";
 import shoppingAnimation from "@/assets/lottie/shopping.json";
 
@@ -37,9 +36,7 @@ type LoginClientPageProps = {
 };
 
 export function LoginClientPage({ nextRoute }: LoginClientPageProps) {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [showSessionLoader, setShowSessionLoader] = useState(false);
 
   const safeNextRoute = getSafeRedirect(nextRoute ?? null);
 
@@ -51,23 +48,23 @@ export function LoginClientPage({ nextRoute }: LoginClientPageProps) {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await apiFetch("/auth/login", {
+      const result = await apiFetch<{ user: { publicIdentifier: string | null } }>("/auth/login", {
         method: "POST",
         body: JSON.stringify(values),
       });
-      toast.success("Signed in successfully");
-      setShowSessionLoader(true);
-      setTimeout(() => {
-        router.replace(safeNextRoute);
-      }, 4600);
+      markBootIntro();
+      const destination =
+        safeNextRoute !== "/dashboard" || !result?.user?.publicIdentifier
+          ? safeNextRoute
+          : `/${result.user.publicIdentifier}/dashboard`;
+      window.location.assign(destination);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to sign in right now");
     }
   });
 
   return (
-    <>
-      <AuthShell
+    <AuthShell
       visual={
         <div className="space-y-6 px-2 py-4 text-slate-950">
           <WarebaseLogo />
@@ -157,7 +154,5 @@ export function LoginClientPage({ nextRoute }: LoginClientPageProps) {
         </form>
       </div>
       </AuthShell>
-      <SessionLoader mode="login" visible={showSessionLoader} />
-    </>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronRight, ChevronsLeft, ChevronsRight, LogOut, User2 } from "lucide-react";
 import { toast } from "sonner";
 import { navigationGroups, NAV_TONES } from "@/lib/navigation";
+import { workspaceHref } from "@/lib/workspace";
 import { cn } from "@/lib/cn";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { apiFetch } from "@/lib/api";
@@ -22,9 +23,12 @@ const TONES = NAV_TONES;
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const params = useParams<{ staffId?: string }>();
   const { data } = useCurrentUser();
   const [collapsed, setCollapsed] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
+
+  const staffId = params.staffId ?? data?.data?.publicIdentifier;
 
   useEffect(() => {
     const saved = window.localStorage.getItem(COLLAPSED_KEY);
@@ -110,11 +114,12 @@ export function Sidebar() {
                     {visibleItems.map((item) => {
                       const Icon = item.icon;
                       const tone = TONES[item.tone];
-                      const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                      const href = workspaceHref(staffId, item.href);
+                      const active = pathname === href || pathname.startsWith(`${href}/`);
                       return (
                         <Link
                           key={item.href}
-                          href={item.href}
+                          href={href}
                           title={collapsed ? item.label : undefined}
                           className={cn(
                             "group flex items-center gap-3 rounded-[1rem] px-3 py-2.5 text-sm font-medium tracking-normal transition-colors",
@@ -153,8 +158,13 @@ export function Sidebar() {
         <div className={cn("p-3", collapsed && "px-2")}>
               <div className="rounded-[1rem] border border-border/70 bg-background/95 p-3">
                 <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-background text-foreground/80 shadow-none">
-                <User2 className="h-[20px] w-[20px] stroke-[2.1]" />
+                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-background text-foreground/80 shadow-none">
+                    {data?.data?.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={data.data.avatarUrl} alt={data.data.name ?? "User"} className="h-full w-full object-cover" />
+                    ) : (
+                      <User2 className="h-[20px] w-[20px] stroke-[2.1]" />
+                    )}
                   </div>
               {!collapsed ? (
                 <div className="min-w-0 flex-1">

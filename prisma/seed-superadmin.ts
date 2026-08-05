@@ -22,6 +22,7 @@ async function main() {
         passwordHash,
         role: UserRole.ADMIN,
         isActive: true,
+        isSuperAdmin: true,
       },
     });
     console.log("Superadmin updated successfully.");
@@ -36,6 +37,7 @@ async function main() {
         passwordHash,
         role: UserRole.ADMIN,
         isActive: true,
+        isSuperAdmin: true,
         publicIdentifier,
       },
     });

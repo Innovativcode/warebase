@@ -3,14 +3,9 @@ import { prisma } from "@/db/prisma";
 import { ApiError } from "@/utils/http";
 import { ROLE_RANK, getUserPermissions } from "@/middleware/permissions";
 import { userCreateSchema, userPatchSchema } from "./users.schemas";
+import { createUniquePublicIdentifier } from "@/utils/public-identifier";
 
 const MANAGER_CREATABLE_ROLES = ["STAFF", "VIEWER"];
-
-const generatePublicIdentifier = (name: string): string => {
-  const sanitized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const random = Math.random().toString(36).substring(2, 8);
-  return `${sanitized}-${random}`;
-};
 
 export type UserActor = {
   id: string;
@@ -26,14 +21,16 @@ export const listUsers = async () => {
       email: true,
       role: true,
       isActive: true,
+      isSuperAdmin: true,
       avatarUrl: true,
+      publicIdentifier: true,
       createdAt: true,
       updatedAt: true,
     },
   });
 
   const usersWithPermissions = await Promise.all(
-    users.map(async (user: { id: string; role: string; name: string; email: string; isActive: boolean; createdAt: Date; updatedAt: Date }) => {
+    users.map(async (user: { id: string; role: string; name: string; email: string; isActive: boolean; isSuperAdmin: boolean; createdAt: Date; updatedAt: Date }) => {
       const permissions = await getUserPermissions(user.id, user.role);
       return { ...user, permissions };
     })
@@ -56,7 +53,7 @@ export const createUser = async (actor: UserActor, input: unknown) => {
   }
 
   const passwordHash = await bcrypt.hash(payload.password, 12);
-  const publicIdentifier = generatePublicIdentifier(payload.name);
+  const publicIdentifier = await createUniquePublicIdentifier(payload.name);
 
   const user = await prisma.user.create({
     data: {
@@ -74,7 +71,9 @@ export const createUser = async (actor: UserActor, input: unknown) => {
       email: true,
       role: true,
       isActive: true,
+      isSuperAdmin: true,
       avatarUrl: true,
+      publicIdentifier: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -91,6 +90,14 @@ export const updateUser = async (actor: UserActor, id: string, input: unknown) =
 
   if (!existing) {
     throw new ApiError(404, "User not found");
+  }
+
+  if (
+    existing.isSuperAdmin &&
+    ((payload.role !== undefined && payload.role !== existing.role) ||
+      (payload.isActive !== undefined && payload.isActive !== existing.isActive))
+  ) {
+    throw new ApiError(403, "Super admin role and status are fixed and cannot be modified");
   }
 
   const actorRank = ROLE_RANK[actor.role] ?? 0;
@@ -125,7 +132,9 @@ export const updateUser = async (actor: UserActor, id: string, input: unknown) =
       email: true,
       role: true,
       isActive: true,
+      isSuperAdmin: true,
       avatarUrl: true,
+      publicIdentifier: true,
       createdAt: true,
       updatedAt: true,
     },

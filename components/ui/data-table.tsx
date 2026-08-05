@@ -21,6 +21,14 @@ export type DataTableProps<T> = {
   defaultPageSize?: number;
   emptyMessage?: string;
   keyExtractor: (item: T) => string;
+  onRowClick?: (item: T) => void;
+};
+
+const isInteractiveTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest("a, button, input, select, textarea, label, [data-no-row-click]"),
+  );
 };
 
 export function DataTable<T>({
@@ -30,6 +38,7 @@ export function DataTable<T>({
   defaultPageSize = 10,
   emptyMessage = "No data available",
   keyExtractor,
+  onRowClick,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -122,7 +131,22 @@ export function DataTable<T>({
           </TableHeader>
           <TableBody>
             {paginatedData.map((item) => (
-              <TableRow key={keyExtractor(item)}>
+              <TableRow
+                key={keyExtractor(item)}
+                onClick={onRowClick ? (event) => {
+                  if (!isInteractiveTarget(event.target)) onRowClick(item);
+                } : undefined}
+                onKeyDown={onRowClick ? (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    if (!isInteractiveTarget(event.target)) {
+                      event.preventDefault();
+                      onRowClick(item);
+                    }
+                  }
+                } : undefined}
+                className={onRowClick ? "cursor-pointer" : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
+              >
                 {columns.map((column) => (
                   <TableCell key={column.key} className={column.className}>
                     {column.render
@@ -158,49 +182,55 @@ export function DataTable<T>({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
+        {totalPages > 1 ? (
+          <div className="flex items-center gap-2">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Go to first page"
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Previous page"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Next page"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Go to last page"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => handlePageChange(1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => handlePageChange(totalPages)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );

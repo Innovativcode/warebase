@@ -43,6 +43,15 @@ export const getRolePermissions = async (role: string): Promise<Permission[]> =>
 };
 
 export const getUserPermissions = async (userId: string, role: string): Promise<Permission[]> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isSuperAdmin: true },
+  });
+
+  if (user?.isSuperAdmin) {
+    return [...ALL_PERMISSIONS];
+  }
+
   const rolePermissions = await getRolePermissions(role);
 
   const userOverrides = await prisma.permissionOverride.findMany({
@@ -133,6 +142,7 @@ export const setRolePermission = async (role: string, permission: Permission, gr
 };
 
 export const setUserPermission = async (userId: string, permission: Permission, granted: boolean) => {
+  await assertNotSuperAdmin(userId);
   return prisma.permissionOverride.upsert({
     where: {
       userId_permission: {
@@ -149,7 +159,20 @@ export const setUserPermission = async (userId: string, permission: Permission, 
   });
 };
 
+const assertNotSuperAdmin = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isSuperAdmin: true },
+  });
+
+  if (user?.isSuperAdmin) {
+    throw new ApiError(403, "Super admin permissions are fixed and cannot be modified");
+  }
+};
+
 export const setUserPermissions = async (userId: string, changes: Record<string, boolean>) => {
+  await assertNotSuperAdmin(userId);
+
   const entries = Object.entries(changes).filter(([permission]) =>
     ALL_PERMISSIONS.includes(permission as Permission),
   );

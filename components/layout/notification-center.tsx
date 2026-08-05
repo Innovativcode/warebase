@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Bell, CheckCheck, CircleAlert, CircleCheckBig, CircleHelp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { apiFetch } from "@/lib/api";
+import { workspaceHref } from "@/lib/workspace";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useRealtimeEvent } from "@/hooks/use-realtime";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import type { NotificationRecord } from "@/lib/types";
 
 const safeRoutes = new Set([
@@ -34,10 +36,14 @@ const iconByTitle = (title: string) => {
 
 export function NotificationCenter() {
   const router = useRouter();
+  const params = useParams<{ staffId?: string }>();
+  const { data: user } = useCurrentUser();
   const { data, loading, error, refetch } = useNotifications();
   const [open, setOpen] = useState(false);
   const unreadCount = data?.data?.unreadCount ?? 0;
   const items = data?.data?.items ?? [];
+
+  const staffId = params.staffId ?? user?.data?.publicIdentifier;
 
   useRealtimeEvent("notification:new", (payload) => {
     const title = typeof payload === "object" && payload && "title" in payload ? String(payload.title) : "New notification";
@@ -124,7 +130,10 @@ export function NotificationCenter() {
                   onSelect={async (event) => {
                     event.preventDefault();
                     await markRead(notification);
-                    const targetHref = notification.href && safeRoutes.has(notification.href) ? notification.href : "/dashboard";
+                    const fallback = staffId ? `/${staffId}/dashboard` : "/dashboard";
+                    const targetHref = notification.href && safeRoutes.has(notification.href)
+                      ? workspaceHref(staffId, notification.href)
+                      : fallback;
                     if (targetHref) {
                       router.push(targetHref);
                     }

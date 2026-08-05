@@ -2,6 +2,14 @@ import { prisma } from "@/db/prisma";
 
 const EAN13_PREFIX = "290";
 
+export const normalizeBarcode = (value: string | null | undefined): string | null => {
+  const normalized = value?.trim() ?? "";
+  return normalized || null;
+};
+
+export const isBarcodeMissing = (value: string | null | undefined): boolean =>
+  !normalizeBarcode(value);
+
 const hashString = (value: string): number => {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -35,7 +43,9 @@ export const generateUniqueBarcode = async (seedValue: string): Promise<string> 
 
 export const ensureAllProductsHaveBarcode = async (): Promise<number> => {
   const products = await prisma.product.findMany({
-    where: { barcode: null },
+    where: {
+      OR: [{ barcode: null }, { barcode: "" }],
+    },
     select: { id: true, sku: true },
   });
 
@@ -51,4 +61,22 @@ export const ensureAllProductsHaveBarcode = async (): Promise<number> => {
   }
 
   return assigned;
+};
+
+export const ensureProductBarcode = async (
+  id: string,
+  seed: string,
+  existing: string | null,
+): Promise<string | null> => {
+  if (!isBarcodeMissing(existing)) {
+    return existing;
+  }
+
+  const barcode = await generateUniqueBarcode(seed);
+  await prisma.product.update({
+    where: { id },
+    data: { barcode },
+  });
+
+  return barcode;
 };

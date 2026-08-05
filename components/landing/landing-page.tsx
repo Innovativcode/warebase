@@ -94,11 +94,18 @@ export function LandingPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="whitespace-nowrap px-3"
+                className="whitespace-nowrap px-2.5"
                 onClick={() => router.push("/dashboard")}
                 aria-label="Go to dashboard"
               >
-                <User2 className="h-[22px] w-[22px] stroke-[2]" />
+                <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-background">
+                  {currentUser?.data?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={currentUser.data.avatarUrl} alt={currentUser.data.name ?? "User"} className="h-full w-full object-cover" />
+                  ) : (
+                    <User2 className="h-[22px] w-[22px] stroke-[2]" />
+                  )}
+                </span>
               </Button>
             ) : (
               <>

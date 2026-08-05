@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import type { ProductRecord, SupplierRecord } from "@/lib/types";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { ProductBarcode } from "@/components/products/product-barcode";
 
 type ProductDialogProps = {
   open: boolean;
@@ -145,11 +146,16 @@ export function ProductDialog({
           <div className="space-y-2">
             <Label htmlFor="barcode">Barcode</Label>
             <Input id="barcode" value={form.barcode} onChange={(event) => updateField("barcode", event.target.value)} placeholder="Optional barcode" />
+            <p className="text-xs text-muted-foreground">Leave blank to auto-generate a scannable EAN-13 barcode.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="unit">Unit</Label>
             <Input id="unit" value={form.unit} onChange={(event) => updateField("unit", event.target.value)} />
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Barcode preview</Label>
+          <ProductBarcode value={form.barcode || null} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="name">Product name</Label>

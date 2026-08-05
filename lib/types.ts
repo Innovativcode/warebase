@@ -178,7 +178,9 @@ export type UserRecord = {
   email: string;
   role: "ADMIN" | "MANAGER" | "STAFF" | "VIEWER";
   isActive: boolean;
+  isSuperAdmin: boolean;
   avatarUrl: string | null;
+  publicIdentifier: string | null;
   permissions: Permission[];
   createdAt: string;
   updatedAt: string;
