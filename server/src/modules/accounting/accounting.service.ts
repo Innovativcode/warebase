@@ -1,5 +1,6 @@
 import { prisma } from "@/db/prisma";
 import { Prisma, type TransactionType } from "@prisma/client";
+import { getBusinessCurrency } from "@/modules/settings/settings.service";
 
 type CreateTransactionInput = {
   type: TransactionType;
@@ -7,7 +8,7 @@ type CreateTransactionInput = {
   category: string;
   description?: string | null;
   reference?: string | null;
-  currency?: string;
+  currency?: string | null;
   occurredAt?: Date;
   createdByUserId?: string | null;
   businessId?: string | null;
@@ -27,11 +28,13 @@ export const createTransaction = async (input: CreateTransactionInput) => {
     throw new Error("Amount must be positive");
   }
 
+  const currency = input.currency ?? (await getBusinessCurrency());
+
   return prisma.transaction.create({
     data: {
       type: input.type,
       amount,
-      currency: input.currency ?? "USD",
+      currency,
       category: input.category,
       description: input.description ?? null,
       reference: input.reference ?? null,
@@ -144,6 +147,7 @@ export const getAccountingSummary = async (options?: { businessId?: string | nul
   }));
 
   return {
+    currency: await getBusinessCurrency(),
     totals: {
       income: Number(incomeTotal),
       expense: Number(expenseTotal),

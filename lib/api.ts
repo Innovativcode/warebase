@@ -39,6 +39,7 @@ import type {
   AccountingSummary,
   ActivityRecord,
   ApiResult,
+  AppSettings,
   ProductRecord,
   PurchaseOrderRecord,
   ReceiveInput,
@@ -46,6 +47,7 @@ import type {
   StockLevelRecord,
   TransactionInput,
   TransactionRecord,
+  UserRecord,
 } from "./types";
 
 export function fetchStockLevels() {
@@ -109,5 +111,37 @@ export function blockProduct(id: string) {
 export function unblockProduct(id: string) {
   return apiFetch<ApiResult<ProductRecord>>(`/products/${id}/unblock`, {
     method: "POST",
+  });
+}
+
+export function getProduct(id: string) {
+  return apiFetch<ApiResult<ProductRecord>>(`/products/${id}`);
+}
+
+export function fetchAppSettings() {
+  return apiFetch<ApiResult<AppSettings>>("/settings");
+}
+
+export function updateAppSettings(input: Partial<AppSettings>) {
+  return apiFetch<ApiResult<AppSettings>>("/settings", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateUserPermissions(userId: string, permissions: Record<string, boolean>) {
+  return apiFetch<ApiResult<{ userId: string; permissions: Record<string, boolean> }>>(
+    `/permissions/user/${userId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ permissions }),
+    },
+  );
+}
+
+export function updateMe(input: { name?: string; avatarUrl?: string | null }) {
+  return apiFetch<ApiResult<UserRecord>>("/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(input),
   });
 }

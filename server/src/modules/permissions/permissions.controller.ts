@@ -4,6 +4,7 @@ import {
   getPermissionMatrix,
   setRolePermission,
   setUserPermission,
+  setUserPermissions,
   getUserPermissionOverrides,
   getRolePermissionOverrides,
   ALL_PERMISSIONS,
@@ -29,6 +30,19 @@ export const updateRolePermission = asyncHandler(async (req: Request, res: Respo
 
 export const updateUserPermission = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.params.userId as string;
+
+  if (req.body && typeof req.body === "object" && req.body.permissions && typeof req.body.permissions === "object") {
+    const changes = Object.fromEntries(
+      Object.entries(req.body.permissions as Record<string, unknown>).map(([permission, granted]) => [
+        permission,
+        Boolean(granted),
+      ]),
+    );
+    await setUserPermissions(userId, changes);
+    res.json({ success: true, data: { userId, permissions: changes } });
+    return;
+  }
+
   const { permission, granted } = req.body as { permission: string; granted: boolean };
 
   if (!ALL_PERMISSIONS.includes(permission as Permission)) {

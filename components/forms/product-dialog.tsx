@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ProductRecord, SupplierRecord } from "@/lib/types";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 type ProductDialogProps = {
   open: boolean;
@@ -36,6 +37,7 @@ type ProductFormState = {
   reorderQty: string;
   supplierId: string;
   isActive: boolean;
+  imageUrl: string | null;
 };
 
 const emptyState: ProductFormState = {
@@ -48,6 +50,7 @@ const emptyState: ProductFormState = {
   reorderQty: "0",
   supplierId: "",
   isActive: true,
+  imageUrl: null,
 };
 
 export function ProductDialog({
@@ -75,6 +78,7 @@ export function ProductDialog({
         reorderQty: String(product.reorderQty),
         supplierId: product.supplier?.id ?? "",
         isActive: product.isActive,
+        imageUrl: product.imageUrl ?? null,
       });
       return;
     }
@@ -102,6 +106,7 @@ export function ProductDialog({
       reorderQty: Number(form.reorderQty),
       supplierId: form.supplierId || null,
       isActive: form.isActive,
+      imageUrl: form.imageUrl,
     };
 
     try {
@@ -127,6 +132,11 @@ export function ProductDialog({
       onOpenChange={onOpenChange}
     >
       <form className="grid gap-4" onSubmit={handleSubmit}>
+        <ImageUpload
+          value={form.imageUrl}
+          onChange={(imageUrl) => updateField("imageUrl", imageUrl)}
+          label="Product image"
+        />
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="sku">SKU</Label>

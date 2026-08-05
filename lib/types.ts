@@ -73,11 +73,19 @@ export type ProductRecord = {
   reorderPoint: number;
   reorderQty: number;
   isActive: boolean;
+  imageUrl: string | null;
+  flaggedAt: string | null;
+  flaggedReason: string | null;
   category: { id: string; name: string } | null;
   supplier: { id: string; name: string } | null;
   quantityOnHand: number;
   reservedQty: number;
   availableQty: number;
+  inventoryItems: Array<{
+    quantityOnHand: number;
+    availableQty: number;
+    warehouse: { id: string; code: string; name: string };
+  }>;
 };
 
 export type WarehouseRecord = {
@@ -170,9 +178,14 @@ export type UserRecord = {
   email: string;
   role: "ADMIN" | "MANAGER" | "STAFF" | "VIEWER";
   isActive: boolean;
+  avatarUrl: string | null;
   permissions: Permission[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type AppSettings = {
+  currency: string | null;
 };
 
 export type AuditLogRecord = {
@@ -220,7 +233,7 @@ export type TransactionRecord = {
   id: string;
   type: "INCOME" | "EXPENSE";
   amount: string;
-  currency: string;
+  currency: string | null;
   category: string;
   description: string | null;
   reference: string | null;
@@ -229,6 +242,7 @@ export type TransactionRecord = {
 };
 
 export type AccountingSummary = {
+  currency: string | null;
   totals: {
     income: number;
     expense: number;

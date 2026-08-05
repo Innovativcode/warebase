@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, logout, me, register } from "./auth.controller";
+import { login, logout, me, register, updateMe } from "./auth.controller";
 import { requireAuth } from "@/middleware/auth";
 
 export const authRouter = Router();
@@ -8,4 +8,5 @@ authRouter.post("/register", register);
 authRouter.post("/login", login);
 authRouter.post("/logout", logout);
 authRouter.get("/me", requireAuth, me);
+authRouter.patch("/me", requireAuth, updateMe);
 

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { env } from "@/config/env";
 import { ApiError, asyncHandler } from "@/utils/http";
-import { getCurrentUser, loginUser, registerUser } from "./auth.service";
+import { getCurrentUser, loginUser, registerUser, updateOwnProfile } from "./auth.service";
 import type { AuthenticatedRequest } from "@/middleware/auth";
 
 const cookieOptions = {
@@ -37,6 +37,15 @@ export const me = asyncHandler(async (req: AuthenticatedRequest, res: Response) 
   }
 
   const user = await getCurrentUser(req.user.id);
+  res.json({ success: true, data: user });
+});
+
+export const updateMe = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const user = await updateOwnProfile(req.user.id, req.body);
   res.json({ success: true, data: user });
 });
 

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Package, Pencil, Plus, ArrowUpDown, Box, CheckCircle2, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import type { ProductRecord } from "@/lib/types";
 import { InlineLoader } from "@/components/loader/warebase-loader";
 import automationAnimation from "@/assets/lottie/automation.json";
@@ -27,11 +28,18 @@ export function ProductsClientPage({ products, loading, error, onCreate, onEdit,
       sortable: true,
       render: (product) => (
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
-            <Package className="h-[18px] w-[18px] stroke-[1.9]" />
+          <span className="mt-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-[0.85rem] border border-border/70 bg-background">
+            {product.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <Package className="h-[18px] w-[18px] stroke-[1.9] text-muted-foreground/80" />
+            )}
           </span>
           <div>
-            <div className="font-medium text-foreground">{product.name}</div>
+            <Link href={`/products/${product.id}`} className="font-medium text-foreground hover:underline">
+              {product.name}
+            </Link>
             <div className="text-xs text-muted-foreground">{product.sku}</div>
           </div>
         </div>

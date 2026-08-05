@@ -1,5 +1,7 @@
-import { useMemo } from "react";
-import { AlertTriangle } from "lucide-react";
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertTriangle, ArrowRightLeft, Coins, TrendingDown, TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { StatCard } from "@/components/layout/stat-card";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
@@ -7,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/layout/empty-state";
 import {
   Activity,
-  ArrowRightLeft,
   Boxes,
   Clock3,
   Package,
@@ -17,8 +18,11 @@ import {
   Workflow,
   ScanSearch,
 } from "lucide-react";
-import type { DashboardSummary } from "@/lib/types";
-import { FinanceOverview } from "@/components/dashboard/finance-overview";
+import type { ApiResult, AccountingSummary, DashboardSummary } from "@/lib/types";
+import { formatMoney } from "@/lib/currency";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { apiFetch } from "@/lib/api";
+import { subscribeRealtime } from "@/lib/realtime";
 import { LiveActivityFeed } from "@/components/dashboard/live-activity-feed";
 import automationAnimation from "@/assets/lottie/automation.json";
 
@@ -35,13 +39,6 @@ const movementTone: Record<"IN" | "OUT" | "ADJUSTMENT" | "TRANSFER", { label: st
   TRANSFER: { label: "Transfer", icon: ArrowRightLeft, className: "border-sky-200 bg-sky-50 text-sky-700" },
 };
 
-const statIconStyles = {
-  products: "bg-emerald-50 text-emerald-700",
-  warehouses: "bg-sky-50 text-sky-700",
-  suppliers: "bg-violet-50 text-violet-700",
-  projects: "bg-amber-50 text-amber-700",
-} as const;
-
 const movementPalette = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--warning))", "hsl(var(--info))"];
 const lowStockPalette = ["hsl(var(--primary))", "hsl(var(--warning))"];
 const governancePalette = ["hsl(var(--primary))", "hsl(var(--info))"];
@@ -52,6 +49,47 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
   const movementMix = summary?.charts.movementMix ?? [];
   const lowStockPressure = summary?.charts.lowStockPressure ?? [];
   const governance = summary?.charts.governance ?? { approvalsPending: 0, notificationsUnread: 0 };
+
+  const { data: currentUser } = useCurrentUser();
+  const canReadAccounting = currentUser?.data?.permissions?.includes("accounting:read") ?? false;
+
+  const [accounting, setAccounting] = useState<AccountingSummary | null>(null);
+  const [accountingLoading, setAccountingLoading] = useState(canReadAccounting);
+
+  const loadAccounting = useCallback(async () => {
+    if (!canReadAccounting) return;
+    try {
+      setAccountingLoading(true);
+      const result = await apiFetch<ApiResult<AccountingSummary>>("/accounting/summary");
+      setAccounting(result.data ?? null);
+    } catch {
+      setAccounting(null);
+    } finally {
+      setAccountingLoading(false);
+    }
+  }, [canReadAccounting]);
+
+  useEffect(() => {
+    void loadAccounting();
+  }, [loadAccounting]);
+
+  useEffect(() => {
+    if (!canReadAccounting) return;
+    return subscribeRealtime("activity:new", () => {
+      void loadAccounting();
+    });
+  }, [canReadAccounting, loadAccounting]);
+
+  const ledgerTotals = accounting?.totals;
+  const ledgerCurrency = accounting?.currency ?? null;
+
+  const netTrend = useMemo(() => {
+    if (!accounting) return [];
+    return [...accounting.monthlyTrend].slice(-6).map((entry) => ({
+      month: entry.month,
+      Net: entry.income - entry.expense,
+    }));
+  }, [accounting]);
 
   return (
     <>
@@ -71,12 +109,20 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <StatCard
+          label="Income"
+          value={accountingLoading ? "…" : formatMoney(ledgerTotals?.income ?? 0, ledgerCurrency)}
+          hint="Recorded income to date"
+          tone="success"
+          iconClassName="bg-emerald-50 text-emerald-700"
+          icon={<TrendingUp className="h-[18px] w-[18px] text-emerald-700" />}
+        />
         <StatCard
           label="Products"
           value={summary?.totals.products ?? 0}
           hint="Active catalog items"
-          iconClassName={statIconStyles.products}
+          iconClassName="bg-emerald-50 text-emerald-700"
           icon={<Package className="h-[18px] w-[18px] text-emerald-700" />}
         />
         <StatCard
@@ -84,7 +130,7 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
           value={summary?.totals.warehouses ?? 0}
           hint="Stock locations"
           tone="default"
-          iconClassName={statIconStyles.warehouses}
+          iconClassName="bg-sky-50 text-sky-700"
           icon={<Warehouse className="h-[18px] w-[18px] text-sky-700" />}
         />
         <StatCard
@@ -92,20 +138,20 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
           value={summary?.totals.suppliers ?? 0}
           hint="Approved vendors"
           tone="success"
-          iconClassName={statIconStyles.suppliers}
+          iconClassName="bg-violet-50 text-violet-700"
           icon={<Users2 className="h-[18px] w-[18px] text-violet-700" />}
         />
         <StatCard
-          label="Active projects"
-          value={summary?.totals.activeProjects ?? 0}
-          hint="Open workstreams"
+          label="Expenses"
+          value={accountingLoading ? "…" : formatMoney(ledgerTotals?.expense ?? 0, ledgerCurrency)}
+          hint="Recorded expenses to date"
           tone="warning"
-          iconClassName={statIconStyles.projects}
-          icon={<Workflow className="h-[18px] w-[18px] text-amber-700" />}
+          iconClassName="bg-rose-50 text-rose-700"
+          icon={<TrendingDown className="h-[18px] w-[18px] text-rose-700" />}
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+      <div className="mt-6 grid gap-6 xl:grid-cols-3">
         <Card>
           <CardHeader>
             <div>
@@ -172,6 +218,42 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle>Net movement</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">Income minus expenses across the last six months.</p>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {netTrend.length ? (
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={netTrend} margin={{ top: 10, right: 8, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+                    <YAxis tickLine={false} axisLine={false} fontSize={12} />
+                    <Tooltip cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }} />
+                    <Bar dataKey="Net" radius={[6, 6, 0, 0]}>
+                      {netTrend.map((entry) => (
+                        <Cell key={entry.month} fill={entry.Net >= 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <EmptyState
+                title="No net movement yet"
+                description="Once income and expenses are recorded, the net movement trend will appear here."
+                icon={<Coins className="h-6 w-6" />}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
             <div>
@@ -245,8 +327,6 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
             )}
           </CardContent>
         </Card>
-
-        <FinanceOverview />
       </div>
 
       <div className="mt-6">

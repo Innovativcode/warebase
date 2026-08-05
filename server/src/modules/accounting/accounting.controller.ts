@@ -34,7 +34,7 @@ export const postTransaction = asyncHandler(async (req: AuthenticatedRequest, re
     category: String(req.body.category ?? "Other"),
     description: req.body.description ?? null,
     reference: req.body.reference ?? null,
-    currency: req.body.currency ?? "USD",
+    currency: req.body.currency ?? undefined,
     occurredAt: req.body.occurredAt ? new Date(String(req.body.occurredAt)) : undefined,
     createdByUserId: req.user?.id ?? null,
     businessId: actor.businessId,

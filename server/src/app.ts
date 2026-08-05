@@ -22,6 +22,7 @@ import { approvalsRouter } from "@/modules/approvals/approvals.routes";
 import { permissionsRouter } from "@/modules/permissions/permissions.routes";
 import { accountingRouter } from "@/modules/accounting/accounting.routes";
 import { activitiesRouter } from "@/modules/activities/activity.routes";
+import { settingsRouter } from "@/modules/settings/settings.routes";
 
 export const createApp = () => {
   const app = express();
@@ -47,7 +48,7 @@ export const createApp = () => {
     }),
   );
   app.use(helmet());
-  app.use(express.json({ limit: "1mb" }));
+  app.use(express.json({ limit: "6mb" }));
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(morgan("combined"));
@@ -71,6 +72,7 @@ export const createApp = () => {
   app.use("/api/v1/permissions", permissionsRouter);
   app.use("/api/v1/accounting", accountingRouter);
   app.use("/api/v1/activities", activitiesRouter);
+  app.use("/api/v1/settings", settingsRouter);
 
   app.use(notFound);
   app.use(errorHandler);

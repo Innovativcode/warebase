@@ -3,7 +3,7 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import { prisma } from "@/db/prisma";
 import { env } from "@/config/env";
 import { ApiError } from "@/utils/http";
-import { loginSchema, registerSchema } from "./auth.schemas";
+import { loginSchema, registerSchema, updateMeSchema } from "./auth.schemas";
 import { getUserPermissions } from "@/middleware/permissions";
 
 const generatePublicIdentifier = (name: string): string => {
@@ -37,6 +37,7 @@ export const registerUser = async (input: unknown) => {
       email: true,
       role: true,
       isActive: true,
+      avatarUrl: true,
       createdAt: true,
     },
   });
@@ -67,6 +68,7 @@ export const loginUser = async (input: unknown) => {
     email: user.email,
     role: user.role,
     isActive: user.isActive,
+    avatarUrl: user.avatarUrl,
     permissions,
     createdAt: user.createdAt,
   });
@@ -81,6 +83,7 @@ export const getCurrentUser = async (userId: string) => {
       email: true,
       role: true,
       isActive: true,
+      avatarUrl: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -89,6 +92,32 @@ export const getCurrentUser = async (userId: string) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
+
+  const permissions = await getUserPermissions(user.id, user.role);
+
+  return { ...user, permissions };
+};
+
+export const updateOwnProfile = async (userId: string, input: unknown) => {
+  const payload = updateMeSchema.parse(input);
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(payload.name !== undefined ? { name: payload.name } : {}),
+      ...(payload.avatarUrl !== undefined ? { avatarUrl: payload.avatarUrl } : {}),
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      avatarUrl: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
 
   const permissions = await getUserPermissions(user.id, user.role);
 

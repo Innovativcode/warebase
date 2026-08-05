@@ -92,6 +92,7 @@ model User {
   notifications         Notification[]
   permissionOverrides   PermissionOverride[]
   transactions          Transaction[] @relation("TransactionCreator")
+  avatarUrl             String?
 
   @@index([email])
   @@index([businessId])
@@ -165,6 +166,7 @@ model Product {
   purchaseLines  PurchaseOrderLine[]
   flaggedAt      DateTime?
   flaggedReason  String?
+  imageUrl       String?
 }
 
 model InventoryItem {
@@ -359,7 +361,7 @@ model Transaction {
   id              String          @id @default(cuid())
   type            TransactionType
   amount          Decimal         @db.Decimal(14, 2)
-  currency        String          @default("USD")
+  currency        String?
   category        String
   description     String?
   reference       String?
@@ -391,4 +393,10 @@ model Activity {
 
   @@index([businessId, createdAt])
   @@index([type, createdAt])
+}
+
+model AppSetting {
+  id        String   @id @default("singleton")
+  currency  String?
+  updatedAt DateTime @updatedAt
 }

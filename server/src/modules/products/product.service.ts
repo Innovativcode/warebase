@@ -13,6 +13,9 @@ type ProductWithInventory = {
   reorderPoint: number;
   reorderQty: number;
   isActive: boolean;
+  imageUrl: string | null;
+  flaggedAt: Date | null;
+  flaggedReason: string | null;
   businessId: string | null;
   category: { id: string; name: string } | null;
   supplier: { id: string; name: string } | null;
@@ -27,15 +30,31 @@ type ProductWithInventory = {
 export const listProducts = async () => {
   const products = await prisma.product.findMany({
     orderBy: { updatedAt: "desc" },
-    include: PRODUCT_INCLUDE,
+    select: PRODUCT_LIST_SELECT,
   });
 
   return (products as ProductWithInventory[]).map(aggregateProduct);
 };
 
-const PRODUCT_INCLUDE = {
+const PRODUCT_BASE_SELECT = {
+  id: true,
+  sku: true,
+  barcode: true,
+  name: true,
+  description: true,
+  unit: true,
+  reorderPoint: true,
+  reorderQty: true,
+  isActive: true,
+  imageUrl: true,
+  flaggedAt: true,
+  flaggedReason: true,
+  businessId: true,
   category: { select: { id: true, name: true } },
   supplier: { select: { id: true, name: true } },
+} as const;
+
+const PRODUCT_INVENTORY_SELECT = {
   inventoryItems: {
     select: {
       quantityOnHand: true,
@@ -44,6 +63,16 @@ const PRODUCT_INCLUDE = {
       warehouse: { select: { id: true, name: true, code: true } },
     },
   },
+} as const;
+
+const PRODUCT_LIST_SELECT = {
+  ...PRODUCT_BASE_SELECT,
+  ...PRODUCT_INVENTORY_SELECT,
+} as const;
+
+const PRODUCT_DETAIL_SELECT = {
+  ...PRODUCT_BASE_SELECT,
+  ...PRODUCT_INVENTORY_SELECT,
 } as const;
 
 const aggregateProduct = (product: ProductWithInventory) => {
@@ -62,7 +91,7 @@ const aggregateProduct = (product: ProductWithInventory) => {
 export const getProductById = async (id: string) => {
   const product = await prisma.product.findUnique({
     where: { id },
-    include: PRODUCT_INCLUDE,
+    select: PRODUCT_DETAIL_SELECT,
   });
 
   if (!product) {
@@ -75,7 +104,7 @@ export const getProductById = async (id: string) => {
 export const getProductByBarcode = async (barcode: string) => {
   const product = await prisma.product.findFirst({
     where: { barcode },
-    include: PRODUCT_INCLUDE,
+    select: PRODUCT_DETAIL_SELECT,
   });
 
   if (!product) {
@@ -101,6 +130,7 @@ export const createProduct = async (input: unknown) => {
       categoryId: payload.categoryId ?? undefined,
       supplierId: payload.supplierId ?? undefined,
       isActive: payload.isActive,
+      imageUrl: payload.imageUrl ?? undefined,
     },
   });
 };
@@ -121,6 +151,7 @@ export const updateProduct = async (id: string, input: unknown) => {
       barcode: payload.barcode === null ? null : payload.barcode ?? undefined,
       categoryId: payload.categoryId === null ? null : payload.categoryId ?? undefined,
       supplierId: payload.supplierId === null ? null : payload.supplierId ?? undefined,
+      imageUrl: payload.imageUrl === null ? null : payload.imageUrl ?? undefined,
     },
   });
 };

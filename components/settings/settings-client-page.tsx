@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Pencil, ShieldCheck, User2, ShieldAlert, ShieldCheck as ShieldCheckIcon, Clock3, FileClock, Plus, Check, Minus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { apiFetch } from "@/lib/api";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { apiFetch, updateAppSettings } from "@/lib/api";
+import { PERMISSION_LIST, ROLE_ORDER } from "@/lib/permissions";
 import type { AuditLogRecord, UserRecord } from "@/lib/types";
 import { InlineLoader } from "@/components/loader/warebase-loader";
 import { PermissionGate } from "@/components/auth/permission-gate";
@@ -27,23 +36,34 @@ type SettingsClientPageProps = {
   onEditUser: (user: UserRecord) => void;
 };
 
-const PERMISSION_CAPABILITIES: Array<{ key: string; label: string; description: string }> = [
-  { key: "read", label: "View Data", description: "Can view products, inventory, and reports" },
-  { key: "write", label: "Create & Edit", description: "Can create new records and edit existing ones" },
-  { key: "delete", label: "Delete Records", description: "Can remove products, orders, and other data" },
-  { key: "approvals:manage", label: "Approve Requests", description: "Can approve purchase orders and stock requests" },
-  { key: "users:manage", label: "Manage Team", description: "Can add users, assign roles, and manage access" },
-  { key: "audit:read", label: "View Activity Log", description: "Can see the complete history of all actions" },
-];
-
 const DEFAULT_PERMISSION_MATRIX: Record<string, string[]> = {
   VIEWER: ["read"],
   STAFF: ["read", "write"],
-  MANAGER: ["read", "write", "delete", "approvals:manage", "users:manage", "audit:read"],
-  ADMIN: ["read", "write", "delete", "approvals:manage", "users:manage", "audit:read"],
+  MANAGER: ["read", "write", "delete", "approvals:manage", "users:manage", "audit:read", "accounting:read", "accounting:manage"],
+  ADMIN: ["read", "write", "delete", "approvals:manage", "users:manage", "audit:read", "accounting:read", "accounting:manage"],
 };
 
-const ROLE_ORDER = ["VIEWER", "STAFF", "MANAGER", "ADMIN"] as const;
+const CURRENCY_OPTIONS = [
+  { code: "USD", label: "US Dollar (USD)" },
+  { code: "EUR", label: "Euro (EUR)" },
+  { code: "GBP", label: "British Pound (GBP)" },
+  { code: "NGN", label: "Nigerian Naira (NGN)" },
+  { code: "KES", label: "Kenyan Shilling (KES)" },
+  { code: "ZAR", label: "South African Rand (ZAR)" },
+  { code: "GHS", label: "Ghanaian Cedi (GHS)" },
+  { code: "RWF", label: "Rwandan Franc (RWF)" },
+  { code: "TZS", label: "Tanzanian Shilling (TZS)" },
+  { code: "UGX", label: "Ugandan Shilling (UGX)" },
+  { code: "EGP", label: "Egyptian Pound (EGP)" },
+  { code: "MAD", label: "Moroccan Dirham (MAD)" },
+  { code: "AED", label: "UAE Dirham (AED)" },
+  { code: "SAR", label: "Saudi Riyal (SAR)" },
+  { code: "INR", label: "Indian Rupee (INR)" },
+  { code: "CAD", label: "Canadian Dollar (CAD)" },
+  { code: "AUD", label: "Australian Dollar (AUD)" },
+  { code: "JPY", label: "Japanese Yen (JPY)" },
+  { code: "CNY", label: "Chinese Yuan (CNY)" },
+];
 
 const formatAction = (action: string): string => {
   const actionMap: Record<string, string> = {
@@ -92,6 +112,32 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
   const [editingPermissions, setEditingPermissions] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
   const [userPermissions, setUserPermissions] = useState<Record<string, boolean>>({});
+  const [workspaceCurrency, setWorkspaceCurrency] = useState<string | null>(null);
+  const [currencyLoading, setCurrencyLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    apiFetch<{ success: boolean; data: { currency: string | null } }>("/settings")
+      .then((response) => {
+        if (mounted) setWorkspaceCurrency(response.data.currency);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (mounted) setCurrencyLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleSaveCurrency = async () => {
+    try {
+      await updateAppSettings({ currency: workspaceCurrency });
+      toast.success("Workspace currency updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unable to update currency");
+    }
+  };
 
   const handleToggleRolePermission = async (role: string, permission: string) => {
     const currentPermissions = permissionMatrix[role] || [];
@@ -172,8 +218,13 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
       sortable: true,
       render: (user) => (
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
-            <User2 className="h-[18px] w-[18px] stroke-[1.9]" />
+          <span className="mt-0.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-[0.85rem] border border-border/70 bg-background">
+            {user.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+            ) : (
+              <User2 className="h-[18px] w-[18px] stroke-[1.9] text-muted-foreground/80" />
+            )}
           </span>
           <div>
             <div className="font-medium text-foreground">{user.name}</div>
@@ -348,6 +399,48 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
+              <CardTitle>Workspace</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Set the currency used across the ledger, summaries, and charts. No currency is assumed when unset.
+              </p>
+            </div>
+            <Settings2 className="h-5 w-5 text-muted-foreground/60" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-2">
+              <Label>Ledger currency</Label>
+              <Select
+                value={workspaceCurrency ?? "__unset"}
+                onValueChange={(value) => setWorkspaceCurrency(value === "__unset" ? null : value)}
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Choose a currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__unset">Not set</SelectItem>
+                  {CURRENCY_OPTIONS.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleSaveCurrency} disabled={currencyLoading}>
+              {currencyLoading ? "Loading…" : "Save currency"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      </PermissionGate>
+
+      <PermissionGate permission="users:manage">
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
               <CardTitle>Permission matrix</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
                 Click cells to toggle permissions for each role. Changes are saved immediately.
@@ -372,7 +465,7 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {PERMISSION_CAPABILITIES.map((capability) => (
+                {PERMISSION_LIST.map((capability) => (
                   <TableRow key={capability.key}>
                     <TableCell className="font-medium text-foreground">{capability.label}</TableCell>
                     {ROLE_ORDER.map((role) => {
@@ -414,7 +507,7 @@ export function SettingsClientPage({ users, auditLogs, loading, error, onCreateU
         >
           {selectedUser && (
             <div className="space-y-3">
-              {PERMISSION_CAPABILITIES.map((capability) => {
+              {PERMISSION_LIST.map((capability) => {
                 const roleHasPermission = permissionMatrix[selectedUser.role]?.includes(capability.key) || false;
                 const userOverride = userPermissions[capability.key];
                 const effectiveGranted = userOverride !== undefined ? userOverride : roleHasPermission;

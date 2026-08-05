@@ -12,6 +12,7 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { apiFetch } from "@/lib/api";
 import { NotificationCenter } from "@/components/layout/notification-center";
+import { ProfileDialog } from "@/components/forms/profile-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +34,7 @@ export function Topbar({ title, description }: TopbarProps) {
   const { data } = useCurrentUser();
   const [commandOpen, setCommandOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -102,8 +104,13 @@ export function Topbar({ title, description }: TopbarProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 rounded-xl px-2 hover:bg-muted" aria-label="Open account menu">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <User2 className="h-[22px] w-[22px] stroke-[2]" />
+                  <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-background">
+                    {data?.data?.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={data.data.avatarUrl} alt={data.data.name ?? "User"} className="h-full w-full object-cover" />
+                    ) : (
+                      <User2 className="h-[22px] w-[22px] stroke-[2] text-primary" />
+                    )}
                   </span>
                   <span className="text-left leading-tight">
                     <span className="block text-sm font-medium text-foreground">{data?.data?.name ?? "User"}</span>
@@ -114,6 +121,10 @@ export function Topbar({ title, description }: TopbarProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
+                  <User2 className="mr-2 h-4 w-4" />
+                  Edit profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => router.push("/settings")}>
                   <Settings2 className="mr-2 h-4 w-4" />
                   Settings
@@ -128,6 +139,7 @@ export function Topbar({ title, description }: TopbarProps) {
           </div>
         </div>
       </header>
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
       <ConfirmDialog
         open={logoutOpen}
         title="Sign out"

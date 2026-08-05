@@ -149,6 +149,35 @@ export const setUserPermission = async (userId: string, permission: Permission, 
   });
 };
 
+export const setUserPermissions = async (userId: string, changes: Record<string, boolean>) => {
+  const entries = Object.entries(changes).filter(([permission]) =>
+    ALL_PERMISSIONS.includes(permission as Permission),
+  );
+
+  if (!entries.length) {
+    return;
+  }
+
+  await prisma.$transaction(
+    entries.map(([permission, granted]) =>
+      prisma.permissionOverride.upsert({
+        where: {
+          userId_permission: {
+            userId,
+            permission,
+          },
+        },
+        update: { granted },
+        create: {
+          userId,
+          permission,
+          granted,
+        },
+      }),
+    ),
+  );
+};
+
 export const getUserPermissionOverrides = async (userId: string) => {
   return prisma.permissionOverride.findMany({
     where: { userId },
