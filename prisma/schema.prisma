@@ -51,6 +51,25 @@ enum ApprovalStatus {
   CHANGES_REQUESTED
 }
 
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum ActivityType {
+  SCAN
+  FLAG
+  BLOCK
+  UNBLOCK
+  RESTOCK
+  STOCK_IN
+  STOCK_OUT
+  APPROVAL
+  FINANCE
+  USER
+  SYSTEM
+}
+
 model User {
   id                    String   @id @default(cuid())
   name                  String
@@ -72,6 +91,7 @@ model User {
   reviewedApprovals     ApprovalRequest[] @relation("ApprovalReviewedBy")
   notifications         Notification[]
   permissionOverrides   PermissionOverride[]
+  transactions          Transaction[] @relation("TransactionCreator")
 
   @@index([email])
   @@index([businessId])
@@ -143,6 +163,8 @@ model Product {
   inventoryItems InventoryItem[]
   movements      StockMovement[]
   purchaseLines  PurchaseOrderLine[]
+  flaggedAt      DateTime?
+  flaggedReason  String?
 }
 
 model InventoryItem {
@@ -326,7 +348,47 @@ model Business {
   categories      Category[]
   projects        Project[]
   purchaseOrders  PurchaseOrder[]
+  transactions    Transaction[]
+  activities      Activity[]
 
   @@index([slug])
   @@index([publicIdentifier])
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  type            TransactionType
+  amount          Decimal         @db.Decimal(14, 2)
+  currency        String          @default("USD")
+  category        String
+  description     String?
+  reference       String?
+  occurredAt      DateTime        @default(now())
+  createdByUserId String?
+  businessId      String?
+  createdAt       DateTime        @default(now())
+
+  createdBy User?     @relation("TransactionCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  business Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+
+  @@index([type, createdAt])
+  @@index([businessId, createdAt])
+}
+
+model Activity {
+  id         String       @id @default(cuid())
+  type       ActivityType
+  message    String
+  actorName  String?
+  actorRole  String?
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  businessId String?
+  createdAt  DateTime     @default(now())
+
+  business Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, createdAt])
+  @@index([type, createdAt])
 }

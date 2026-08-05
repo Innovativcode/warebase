@@ -13,6 +13,7 @@ type ProductWithInventory = {
   reorderPoint: number;
   reorderQty: number;
   isActive: boolean;
+  businessId: string | null;
   category: { id: string; name: string } | null;
   supplier: { id: string; name: string } | null;
   inventoryItems: Array<{
@@ -132,4 +133,43 @@ export const deleteProduct = async (id: string) => {
   }
 
   await prisma.product.delete({ where: { id } });
+};
+
+export const flagProduct = async (id: string, reason?: string | null) => {
+  const existing = await prisma.product.findUnique({ where: { id } });
+
+  if (!existing) {
+    throw new ApiError(404, "Product not found");
+  }
+
+  return prisma.product.update({
+    where: { id },
+    data: { flaggedAt: new Date(), flaggedReason: reason ?? null },
+  });
+};
+
+export const blockProduct = async (id: string) => {
+  const existing = await prisma.product.findUnique({ where: { id } });
+
+  if (!existing) {
+    throw new ApiError(404, "Product not found");
+  }
+
+  return prisma.product.update({
+    where: { id },
+    data: { isActive: false, flaggedAt: new Date(), flaggedReason: "Blocked by operator" },
+  });
+};
+
+export const unblockProduct = async (id: string) => {
+  const existing = await prisma.product.findUnique({ where: { id } });
+
+  if (!existing) {
+    throw new ApiError(404, "Product not found");
+  }
+
+  return prisma.product.update({
+    where: { id },
+    data: { isActive: true, flaggedAt: null, flaggedReason: null },
+  });
 };

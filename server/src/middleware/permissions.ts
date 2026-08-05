@@ -3,13 +3,13 @@ import { ApiError } from "@/utils/http";
 import type { AuthenticatedRequest } from "./auth";
 import { prisma } from "@/db/prisma";
 
-export type Permission = "read" | "write" | "delete" | "users:manage" | "approvals:manage" | "audit:read";
+export type Permission = "read" | "write" | "delete" | "users:manage" | "approvals:manage" | "audit:read" | "accounting:read" | "accounting:manage";
 
 const DEFAULT_PERMISSION_MATRIX: Record<string, Permission[]> = {
   VIEWER: ["read"],
   STAFF: ["read", "write"],
-  MANAGER: ["read", "write", "delete", "users:manage", "approvals:manage", "audit:read"],
-  ADMIN: ["read", "write", "delete", "users:manage", "approvals:manage", "audit:read"],
+  MANAGER: ["read", "write", "delete", "users:manage", "approvals:manage", "audit:read", "accounting:read", "accounting:manage"],
+  ADMIN: ["read", "write", "delete", "users:manage", "approvals:manage", "audit:read", "accounting:read", "accounting:manage"],
 };
 
 export const ROLE_RANK: Record<string, number> = {
@@ -19,7 +19,7 @@ export const ROLE_RANK: Record<string, number> = {
   ADMIN: 3,
 };
 
-export const ALL_PERMISSIONS: Permission[] = ["read", "write", "delete", "users:manage", "approvals:manage", "audit:read"];
+export const ALL_PERMISSIONS: Permission[] = ["read", "write", "delete", "users:manage", "approvals:manage", "audit:read", "accounting:read", "accounting:manage"];
 
 export const getRolePermissions = async (role: string): Promise<Permission[]> => {
   const overrides = await prisma.permissionOverride.findMany({

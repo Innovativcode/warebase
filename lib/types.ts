@@ -162,7 +162,7 @@ export type ReceiveInput = {
   warehouseId?: string | null;
 };
 
-export type Permission = "read" | "write" | "delete" | "users:manage" | "approvals:manage" | "audit:read";
+export type Permission = "read" | "write" | "delete" | "users:manage" | "approvals:manage" | "audit:read" | "accounting:read" | "accounting:manage";
 
 export type UserRecord = {
   id: string;
@@ -214,4 +214,51 @@ export type ApprovalRecord = {
   reviewedAt: string | null;
   requestedBy: { id: string; name: string; email: string; role: string } | null;
   reviewedBy: { id: string; name: string; email: string; role: string } | null;
+};
+
+export type TransactionRecord = {
+  id: string;
+  type: "INCOME" | "EXPENSE";
+  amount: string;
+  currency: string;
+  category: string;
+  description: string | null;
+  reference: string | null;
+  occurredAt: string;
+  createdAt: string;
+};
+
+export type AccountingSummary = {
+  totals: {
+    income: number;
+    expense: number;
+    net: number;
+    incomeCount: number;
+    expenseCount: number;
+  };
+  recent: TransactionRecord[];
+  monthlyTrend: Array<{ month: string; income: number; expense: number }>;
+};
+
+export type ActivityType = "SCAN" | "FLAG" | "BLOCK" | "UNBLOCK" | "RESTOCK" | "STOCK_IN" | "STOCK_OUT" | "APPROVAL" | "FINANCE" | "USER" | "SYSTEM";
+
+export type ActivityRecord = {
+  id: string;
+  type: ActivityType;
+  message: string;
+  actorName: string | null;
+  actorRole: string | null;
+  targetType: string | null;
+  targetId: string | null;
+  metadata: unknown;
+  createdAt: string;
+};
+
+export type TransactionInput = {
+  type: "INCOME" | "EXPENSE";
+  amount: number;
+  category: string;
+  description?: string | null;
+  reference?: string | null;
+  occurredAt?: string | null;
 };

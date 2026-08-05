@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { getPageMeta } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { GlobalCommandMenu } from "@/components/layout/global-command-menu";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -49,8 +48,8 @@ export function Topbar({ title, description }: TopbarProps) {
   return (
     <>
       <GlobalCommandMenu open={commandOpen} onOpenChange={setCommandOpen} />
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-card">
-        <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+      <header className="surface-gradient sticky top-4 z-30 rounded-[1.5rem] border border-border/70 shadow-[0_2px_8px_rgba(15,23,42,0.05)]">
+        <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
           <MobileNav />
 
           <div className="min-w-0 flex-1">
@@ -102,13 +101,13 @@ export function Topbar({ title, description }: TopbarProps) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 border-border/70 bg-background/95 px-3.5 text-muted-foreground/90 shadow-sm">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-[0.8rem] border border-border/70 bg-background text-foreground/80">
+                <Button variant="ghost" className="gap-2 rounded-xl px-2 hover:bg-muted" aria-label="Open account menu">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <User2 className="h-[22px] w-[22px] stroke-[2]" />
                   </span>
                   <span className="text-left leading-tight">
                     <span className="block text-sm font-medium text-foreground">{data?.data?.name ?? "User"}</span>
-                    <span className="block text-[0.7rem] text-muted-foreground">{data?.data?.role ?? "Member"}</span>
+                    <span className="block text-[0.7rem] capitalize text-muted-foreground">{data?.data?.role?.toLowerCase() ?? "Member"}</span>
                   </span>
                 </Button>
               </DropdownMenuTrigger>
@@ -128,7 +127,6 @@ export function Topbar({ title, description }: TopbarProps) {
             </DropdownMenu>
           </div>
         </div>
-        <Separator />
       </header>
       <ConfirmDialog
         open={logoutOpen}

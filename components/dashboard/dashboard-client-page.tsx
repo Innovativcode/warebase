@@ -18,6 +18,8 @@ import {
   ScanSearch,
 } from "lucide-react";
 import type { DashboardSummary } from "@/lib/types";
+import { FinanceOverview } from "@/components/dashboard/finance-overview";
+import { LiveActivityFeed } from "@/components/dashboard/live-activity-feed";
 import automationAnimation from "@/assets/lottie/automation.json";
 
 type DashboardClientPageProps = {
@@ -243,6 +245,12 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
             )}
           </CardContent>
         </Card>
+
+        <FinanceOverview />
+      </div>
+
+      <div className="mt-6">
+        <LiveActivityFeed />
       </div>
 
       <Card className="mt-6">

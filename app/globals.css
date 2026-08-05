@@ -301,3 +301,33 @@ body {
     animation: none;
   }
 }
+
+/* ===== App shell surfaces ===== */
+
+.surface-gradient {
+  background: linear-gradient(
+    160deg,
+    hsl(var(--background)) 0%,
+    hsl(270 58% 98.9%) 30%,
+    hsl(269 52% 98.1%) 68%,
+    hsl(274 50% 97.6%) 100%
+  );
+}
+
+.vertical-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 31, 56, 0.18) transparent;
+}
+
+.vertical-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vertical-scroll::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background-color: rgba(21, 31, 56, 0.18);
+}
+
+.vertical-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

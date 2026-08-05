@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronRight, ChevronsLeft, ChevronsRight, LogOut, User2 } from "lucide-react";
 import { toast } from "sonner";
-import { navigationGroups } from "@/lib/navigation";
+import { navigationGroups, NAV_TONES } from "@/lib/navigation";
 import { cn } from "@/lib/cn";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { apiFetch } from "@/lib/api";
@@ -16,6 +16,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { WarebaseIcon } from "@/components/brand/warebase-logo";
 
 const COLLAPSED_KEY = "inventory.sidebar.collapsed";
+
+const TONES = NAV_TONES;
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -63,11 +65,11 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-screen overflow-hidden lg:block",
-        collapsed ? "w-[92px] px-3 py-4" : "w-[304px] px-4 py-4",
+        "sticky top-4 hidden h-[calc(100vh-2rem)] overflow-hidden lg:block",
+        collapsed ? "w-[92px]" : "w-[304px]",
       )}
     >
-      <div className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-border/70 bg-[linear-gradient(160deg,hsl(var(--background))_0%,hsl(270_58%_98.9%)_30%,hsl(269_52%_98.1%)_68%,hsl(274_50%_97.6%)_100%)] shadow-[0_2px_8px_rgba(15,23,42,0.05)]">
+      <div className="surface-gradient flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-border/70 shadow-[0_2px_8px_rgba(15,23,42,0.05)]">
         <div className={cn("flex items-center gap-3 px-4 py-4", collapsed && "flex-col items-center")}>
           <WarebaseIcon className={cn("h-11 w-11 shrink-0", collapsed && "h-12 w-12")} />
           {!collapsed ? (
@@ -90,7 +92,7 @@ export function Sidebar() {
 
         <Separator className="bg-border/60" />
 
-        <div className={cn("flex-1 min-h-0 overflow-hidden px-3 py-3", collapsed && "px-2")}>
+        <div className={cn("vertical-scroll min-h-0 flex-1 overflow-y-auto px-3 py-3", collapsed && "px-2")}>
           <nav className="space-y-4">
             {navigationGroups.map((group) => {
               const visibleItems = group.items.filter(hasPermission);
@@ -107,6 +109,7 @@ export function Sidebar() {
                   <div className="space-y-1">
                     {visibleItems.map((item) => {
                       const Icon = item.icon;
+                      const tone = TONES[item.tone];
                       const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                       return (
                         <Link
@@ -125,11 +128,11 @@ export function Sidebar() {
                             className={cn(
                               "flex h-9 w-9 items-center justify-center rounded-[0.85rem] border transition-colors",
                               active
-                                ? "border-border/70 bg-background text-foreground shadow-none"
-                                : "border-border/70 bg-background text-muted-foreground/70 group-hover:text-foreground/85",
+                                ? cn("shadow-none", tone.active)
+                                : "border-border/70 bg-background group-hover:bg-muted/60",
                             )}
                           >
-                            <Icon size={22} weight="regular" className={cn(active ? "text-foreground/80" : "text-muted-foreground/70 group-hover:text-foreground/85")} />
+                            <Icon size={22} weight={active ? "fill" : "regular"} className={cn(active ? "" : cn(tone.icon, "group-hover:text-foreground/85"))} />
                           </span>
                           {!collapsed ? <span className="flex-1">{item.label}</span> : null}
                           {!collapsed ? (

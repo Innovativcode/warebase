@@ -5,18 +5,19 @@ import Link from "next/link";
 import { useState } from "react";
 import { ChevronRight, LogOut, Menu, X } from "lucide-react";
 import { toast } from "sonner";
-import { navigationGroups } from "@/lib/navigation";
+import { navigationGroups, NAV_TONES } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/cn";
 import { apiFetch } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { WarebaseIcon } from "@/components/brand/warebase-logo";
 
 export function MobileNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data } = useCurrentUser();
   const [logoutOpen, setLogoutOpen] = useState(false);
 
@@ -65,19 +66,33 @@ export function MobileNav() {
                     {group.label}
                   </p>
                   <div className="space-y-1">
-                    {group.items.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
-                      >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-[0.8rem] border border-border/70 bg-background text-foreground/80">
-                          <item.icon size={22} weight="regular" className="text-foreground/80" />
-                        </span>
-                        <span className="flex-1">{item.label}</span>
-                        <ChevronRight className="h-[20px] w-[20px] stroke-[2.1] text-muted-foreground" />
-                      </Link>
-                    ))}
+                    {group.items.map((item) => {
+                      const tone = NAV_TONES[item.tone];
+                      const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            "flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 text-sm font-medium hover:bg-muted",
+                            active ? "bg-background text-foreground" : "text-foreground",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex h-9 w-9 items-center justify-center rounded-[0.8rem] border",
+                              active
+                                ? cn("shadow-none", tone.active)
+                                : "border-border/70 bg-background",
+                            )}
+                          >
+                            <item.icon size={22} weight={active ? "fill" : "regular"} className={cn(!active && tone.icon)} />
+                          </span>
+                          <span className="flex-1">{item.label}</span>
+                          <ChevronRight className="h-[20px] w-[20px] stroke-[2.1] text-muted-foreground" />
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               ))}

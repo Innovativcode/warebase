@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { AlertTriangle, Camera, CameraOff, CheckCircle2, Copy, Loader2, Package, RefreshCw, ScanBarcode, Search, Warehouse } from "lucide-react";
+import { AlertTriangle, Camera, CameraOff, CheckCircle2, Copy, Keyboard, Loader2, Package, RefreshCw, ScanBarcode, Search, Warehouse, X } from "lucide-react";
 import { BinaryBitmap, HybridBinarizer, MultiFormatReader, RGBLuminanceSource } from "@zxing/library";
 import { toast } from "sonner";
 import { apiFetch, ApiClientError, restockProduct } from "@/lib/api";
@@ -108,6 +108,20 @@ export function BarcodeScanner() {
   const [recentScans, setRecentScans] = useState<BarcodeLookupRecord[]>([]);
   const [lastScannedAt, setLastScannedAt] = useState<string | null>(null);
   const [browserSupportsDetector, setBrowserSupportsDetector] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileOverlayOpen, setMobileOverlayOpen] = useState(false);
+  const [showMobileManual, setShowMobileManual] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const media = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobile(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
 
   const stopCamera = useCallback(() => {
     if (intervalRef.current) {
@@ -126,6 +140,25 @@ export function BarcodeScanner() {
 
     setCameraState("idle");
   }, []);
+
+  const closeMobileOverlay = useCallback(() => {
+    setShowMobileManual(false);
+    setMobileOverlayOpen(false);
+    stopCamera();
+  }, [stopCamera]);
+
+  useEffect(() => {
+    if (!mobileOverlayOpen) {
+      return;
+    }
+    if (!streamRef.current || !videoRef.current) {
+      return;
+    }
+    if (videoRef.current.srcObject !== streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+    void videoRef.current.play();
+  }, [mobileOverlayOpen]);
 
   const lookupBarcode = useCallback(async (rawBarcode: string, source: "camera" | "manual") => {
     const normalized = rawBarcode.trim();
@@ -227,11 +260,15 @@ export function BarcodeScanner() {
       }, 900);
 
       setCameraState("scanning");
+      if (isMobile) {
+        setMobileOverlayOpen(true);
+      }
     } catch (error) {
       setCameraState("permission-denied");
+      setMobileOverlayOpen(false);
       setLookupError(error instanceof Error ? error.message : "Camera access is required to scan barcodes");
     }
-  }, [lookupBarcode]);
+  }, [isMobile, lookupBarcode]);
 
   useEffect(() => {
     return () => {
@@ -295,7 +332,7 @@ export function BarcodeScanner() {
               </Badge>
               <CardTitle className="text-[1.35rem]">Barcode lookup</CardTitle>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Use a device camera or the scanner keyboard to resolve products from the live catalog. Every result comes from PostgreSQL-backed product data.
+                Use a device camera or type a barcode to pull up a product with live stock levels and warehouse availability.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -312,7 +349,13 @@ export function BarcodeScanner() {
           <div className="space-y-4">
             <div className="overflow-hidden rounded-[1rem] border border-border bg-background">
               <div className="relative aspect-[4/3] bg-slate-950">
-                <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
+                {!(isMobile && mobileOverlayOpen) ? (
+                  <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">
+                    Camera preview is open in full screen…
+                  </div>
+                )}
                 <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
                 <div className="pointer-events-none absolute inset-0">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02),rgba(15,23,42,0.28))]" />
@@ -546,6 +589,113 @@ export function BarcodeScanner() {
           </div>
         </CardContent>
       </Card>
+
+      {isMobile && mobileOverlayOpen ? (
+        <div className="fixed inset-0 z-50 bg-slate-950">
+          <video ref={videoRef} muted playsInline className="absolute inset-0 h-full w-full object-cover" />
+
+          <div className="pointer-events-none absolute inset-0 flex flex-col">
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/85 to-transparent" />
+
+            <div className="relative flex items-center justify-between px-4 pt-4">
+              <span className="flex items-center gap-2 rounded-full border border-white/20 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-white">
+                <Camera className="h-3.5 w-3.5" />
+                {cameraState === "scanning" ? "Scanning" : "Starting"}
+              </span>
+              <button
+                type="button"
+                onClick={closeMobileOverlay}
+                className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-slate-900/70 text-white"
+                aria-label="Close scanner"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-1 items-center justify-center px-6">
+              <div className="relative h-64 w-72 max-w-full">
+                <div className="absolute inset-0 rounded-[1.5rem] border border-white/35 shadow-[0_0_0_9999px_rgba(2,6,23,0.45)]" />
+                <div className="absolute left-4 right-4 top-1/2 h-0.5 -translate-y-1/2 bg-white/70 shadow-[0_0_12px_rgba(255,255,255,0.7)]" />
+                {lookupLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex items-center gap-2 rounded-full bg-slate-900/80 px-4 py-2 text-sm text-white">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Resolving
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="relative space-y-3 px-4 pb-6 pt-2">
+              {record ? (
+                <div className="rounded-[1rem] border border-white/15 bg-slate-900/85 p-3 backdrop-blur">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.8rem] border border-white/15 bg-slate-800 text-white">
+                      <Package className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white">{record.name}</p>
+                      <p className="font-mono text-xs text-slate-300">
+                        {record.sku} · {numberFormatter.format(record.availableQty)} available
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleRestock(record.id)}
+                      disabled={restocking}
+                      className="flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-900"
+                    >
+                      {restocking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                      Restock
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {showMobileManual ? (
+                <form
+                  className="pointer-events-auto rounded-[1rem] border border-white/15 bg-slate-900/85 p-3 backdrop-blur"
+                  onSubmit={handleManualSubmit}
+                >
+                  <div className="flex gap-2">
+                    <Input
+                      value={barcode}
+                      onChange={(event) => setBarcode(event.target.value)}
+                      placeholder="Type barcode"
+                      className="border-white/20 bg-slate-950 text-white placeholder:text-slate-500"
+                      autoComplete="off"
+                      inputMode="numeric"
+                      autoFocus
+                    />
+                    <Button type="submit" className="gap-1.5">
+                      <Search className="h-4 w-4" />
+                      Lookup
+                    </Button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileManual(false)}
+                    className="mt-2 w-full text-center text-xs text-slate-400"
+                  >
+                    Back to camera
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowMobileManual(true)}
+                  className="pointer-events-auto flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-slate-900/70 py-3 text-sm font-medium text-white"
+                >
+                  <Keyboard className="h-4 w-4" />
+                  Type barcode instead
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
