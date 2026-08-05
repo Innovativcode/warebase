@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BarChart3, Box, CheckCircle2, Clock, Globe2, Package, Shield, Truck, Users, Warehouse, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Box, CheckCircle2, Clock, Globe2, Package, Shield, Truck, User2, Users, Warehouse, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { WarebaseLogo } from "@/components/brand/warebase-logo";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { LottiePlayer } from "@/components/media/lottie-player";
 import inventoryAnimation from "@/assets/lottie/Inventory.json";
 import automationAnimation from "@/assets/lottie/automation.json";
@@ -57,6 +58,7 @@ const STATS = [
 
 export function LandingPage() {
   const router = useRouter();
+  const { data: currentUser, loading: userLoading } = useCurrentUser();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -88,13 +90,27 @@ export function LandingPage() {
             </a>
           </nav>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Button variant="ghost" size="sm" className="whitespace-nowrap px-3" onClick={() => router.push("/login")}>
-              Sign in
-            </Button>
-            <Button size="sm" className="whitespace-nowrap px-3 sm:px-4" onClick={() => router.push("/register")}>
-              Get started
-              <ArrowRight className="ml-1.5 h-4 w-4 sm:ml-2" />
-            </Button>
+            {userLoading ? null : currentUser?.data?.id ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="whitespace-nowrap px-3"
+                onClick={() => router.push("/dashboard")}
+                aria-label="Go to dashboard"
+              >
+                <User2 className="h-[22px] w-[22px] stroke-[2]" />
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="whitespace-nowrap px-3" onClick={() => router.push("/login")}>
+                  Sign in
+                </Button>
+                <Button size="sm" className="whitespace-nowrap px-3 sm:px-4" onClick={() => router.push("/register")}>
+                  Get started
+                  <ArrowRight className="ml-1.5 h-4 w-4 sm:ml-2" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
