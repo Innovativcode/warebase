@@ -74,8 +74,8 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white">
       <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <WarebaseLogo className="h-8" />
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <WarebaseLogo className="h-8 shrink" taglineClassName="hidden md:block" />
           <nav className="hidden items-center gap-8 md:flex">
             <a href="#features" className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900">
               Features
@@ -87,13 +87,13 @@ export function LandingPage() {
               Contact
             </a>
           </nav>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Button variant="ghost" size="sm" className="whitespace-nowrap px-3" onClick={() => router.push("/login")}>
               Sign in
             </Button>
-            <Button size="sm" onClick={() => router.push("/register")}>
+            <Button size="sm" className="whitespace-nowrap px-3 sm:px-4" onClick={() => router.push("/register")}>
               Get started
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-1.5 h-4 w-4 sm:ml-2" />
             </Button>
           </div>
         </div>

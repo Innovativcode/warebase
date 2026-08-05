@@ -28,6 +28,7 @@ type WarebaseLogoProps = {
   className?: string;
   iconClassName?: string;
   wordmarkClassName?: string;
+  taglineClassName?: string;
   showTagline?: boolean;
 };
 
@@ -35,6 +36,7 @@ export function WarebaseLogo({
   className,
   iconClassName,
   wordmarkClassName,
+  taglineClassName,
   showTagline = true,
 }: WarebaseLogoProps) {
   return (
@@ -45,7 +47,7 @@ export function WarebaseLogo({
           Ware<span className="font-bold text-[#1B2A4A]">Base</span>
         </p>
         {showTagline ? (
-          <p className="mt-1.5 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-[#5B6B79]">
+          <p className={cn("mt-1.5 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-[#5B6B79]", taglineClassName)}>
             Every item, in its place
           </p>
         ) : null}
