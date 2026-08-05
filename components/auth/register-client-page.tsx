@@ -15,6 +15,7 @@ import { apiFetch } from "@/lib/api";
 import { LottiePlayer } from "@/components/media/lottie-player";
 import { WarebaseLogo } from "@/components/brand/warebase-logo";
 import successAnimation from "@/assets/lottie/success.json";
+import { WarebaseLoader } from "@/components/loader/warebase-loader";
 
 const registerSchema = z
   .object({
@@ -59,7 +60,6 @@ export function RegisterClientPage() {
       });
       toast.success("Account created successfully");
       router.replace("/onboarding/welcome");
-      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to create account right now");
     }
@@ -178,7 +178,13 @@ export function RegisterClientPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Creating account..." : "Create account"}
+            {form.formState.isSubmitting ? (
+              <span className="inline-flex items-center justify-center">
+                <WarebaseLoader variant="compact" className="warebase-loader--on-dark" />
+              </span>
+            ) : (
+              "Create account"
+            )}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">

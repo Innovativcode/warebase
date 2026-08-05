@@ -29,7 +29,6 @@ export function MobileNav() {
     }
     setLogoutOpen(false);
     router.push("/login");
-    router.refresh();
   };
 
   return (

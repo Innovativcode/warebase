@@ -162,12 +162,15 @@ export type ReceiveInput = {
   warehouseId?: string | null;
 };
 
+export type Permission = "read" | "write" | "delete" | "users:manage" | "approvals:manage" | "audit:read";
+
 export type UserRecord = {
   id: string;
   name: string;
   email: string;
   role: "ADMIN" | "MANAGER" | "STAFF" | "VIEWER";
   isActive: boolean;
+  permissions: Permission[];
   createdAt: string;
   updatedAt: string;
 };

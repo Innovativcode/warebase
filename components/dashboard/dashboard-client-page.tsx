@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AppShell } from "@/components/layout/app-shell";
 import { StatCard } from "@/components/layout/stat-card";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +52,7 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
   const governance = summary?.charts.governance ?? { approvalsPending: 0, notificationsUnread: 0 };
 
   return (
-    <AppShell title="Dashboard" description="Operational visibility for inventory, purchasing and warehouse control.">
+    <>
       <PageHeroPanel
         badge="Control center"
         title="Operations dashboard"
@@ -306,6 +305,6 @@ export function DashboardClientPage({ summary, loading, error }: DashboardClient
           )}
         </CardContent>
       </Card>
-    </AppShell>
+    </>
   );
 }

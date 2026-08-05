@@ -46,7 +46,18 @@ export function Sidebar() {
     }
     setLogoutOpen(false);
     router.push("/login");
-    router.refresh();
+  };
+
+  const userPermissions = data?.data?.permissions || [];
+
+  const hasPermission = (item: { permission?: string | string[]; requireAll?: boolean }) => {
+    if (!item.permission) return true;
+    
+    const permissions = Array.isArray(item.permission) ? item.permission : [item.permission];
+    
+    return item.requireAll
+      ? permissions.every((p) => userPermissions.includes(p as any))
+      : permissions.some((p) => userPermissions.includes(p as any));
   };
 
   return (
@@ -81,50 +92,56 @@ export function Sidebar() {
 
         <div className={cn("flex-1 min-h-0 overflow-hidden px-3 py-3", collapsed && "px-2")}>
           <nav className="space-y-4">
-            {navigationGroups.map((group) => (
-              <div key={group.label} className="space-y-2">
-                {!collapsed ? (
-                  <p className="px-3 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {group.label}
-                  </p>
-                ) : null}
-                <div className="space-y-1">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        title={collapsed ? item.label : undefined}
-                        className={cn(
-                          "group flex items-center gap-3 rounded-[1rem] px-3 py-2.5 text-sm font-medium tracking-normal transition-colors",
-                          active
-                            ? "border border-border/70 bg-background text-foreground shadow-none"
-                            : "text-muted-foreground/80 hover:bg-muted hover:text-foreground",
-                          collapsed && "justify-center px-2",
-                        )}
-                      >
-                        <span
+            {navigationGroups.map((group) => {
+              const visibleItems = group.items.filter(hasPermission);
+              
+              if (visibleItems.length === 0) return null;
+              
+              return (
+                <div key={group.label} className="space-y-2">
+                  {!collapsed ? (
+                    <p className="px-3 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      {group.label}
+                    </p>
+                  ) : null}
+                  <div className="space-y-1">
+                    {visibleItems.map((item) => {
+                      const Icon = item.icon;
+                      const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          title={collapsed ? item.label : undefined}
                           className={cn(
-                            "flex h-9 w-9 items-center justify-center rounded-[0.85rem] border transition-colors",
+                            "group flex items-center gap-3 rounded-[1rem] px-3 py-2.5 text-sm font-medium tracking-normal transition-colors",
                             active
-                              ? "border-border/70 bg-background text-foreground shadow-none"
-                              : "border-border/70 bg-background text-muted-foreground/70 group-hover:text-foreground/85",
+                              ? "border border-border/70 bg-background text-foreground shadow-none"
+                              : "text-muted-foreground/80 hover:bg-muted hover:text-foreground",
+                            collapsed && "justify-center px-2",
                           )}
                         >
-                          <Icon size={22} weight="regular" className={cn(active ? "text-foreground/80" : "text-muted-foreground/70 group-hover:text-foreground/85")} />
-                        </span>
-                        {!collapsed ? <span className="flex-1">{item.label}</span> : null}
-                        {!collapsed ? (
-                          <ChevronRight className={cn("h-[20px] w-[20px] stroke-[2.1] transition-transform", active ? "text-foreground/70" : "opacity-0 group-hover:opacity-100 text-muted-foreground")} />
-                        ) : null}
-                      </Link>
-                    );
-                  })}
+                          <span
+                            className={cn(
+                              "flex h-9 w-9 items-center justify-center rounded-[0.85rem] border transition-colors",
+                              active
+                                ? "border-border/70 bg-background text-foreground shadow-none"
+                                : "border-border/70 bg-background text-muted-foreground/70 group-hover:text-foreground/85",
+                            )}
+                          >
+                            <Icon size={22} weight="regular" className={cn(active ? "text-foreground/80" : "text-muted-foreground/70 group-hover:text-foreground/85")} />
+                          </span>
+                          {!collapsed ? <span className="flex-1">{item.label}</span> : null}
+                          {!collapsed ? (
+                            <ChevronRight className={cn("h-[20px] w-[20px] stroke-[2.1] transition-transform", active ? "text-foreground/70" : "opacity-0 group-hover:opacity-100 text-muted-foreground")} />
+                          ) : null}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </nav>
         </div>
 

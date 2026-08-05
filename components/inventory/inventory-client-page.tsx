@@ -1,10 +1,9 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/layout/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type Column } from "@/components/ui/data-table";
 import { AlertTriangle, ArrowRightLeft, Boxes, Loader2, PackageOpen, Plus, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
 import { LottiePlayer } from "@/components/media/lottie-player";
 import inventoryAnimation from "@/assets/lottie/Inventory.json";
@@ -34,8 +33,55 @@ export function InventoryClientPage({
 }: InventoryClientPageProps) {
   const lowStock = stockLevels?.filter((item) => item.availableQty <= item.product.reorderPoint) ?? [];
 
+  const movementColumns: Column<MovementRecord>[] = [
+    {
+      key: "product",
+      label: "Product",
+      sortable: true,
+      render: (movement) => (
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
+            {movement.type === "IN" ? (
+              <TrendingUp className="h-[18px] w-[18px] stroke-[1.9]" />
+            ) : movement.type === "OUT" ? (
+              <TrendingDown className="h-[18px] w-[18px] stroke-[1.9]" />
+            ) : (
+              <ArrowRightLeft className="h-[18px] w-[18px] stroke-[1.9]" />
+            )}
+          </span>
+          <div>
+            <div className="font-medium text-foreground">{movement.product.name}</div>
+            <div className="text-xs text-muted-foreground">{movement.product.sku}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "type",
+      label: "Type",
+      sortable: true,
+      render: (movement) => (
+        <Badge variant={movement.type === "IN" ? "success" : movement.type === "OUT" ? "danger" : "info"}>
+          {movement.type}
+        </Badge>
+      ),
+    },
+    {
+      key: "quantity",
+      label: "Quantity",
+      sortable: true,
+      render: (movement) => <span className="tabular-nums">{movement.quantity}</span>,
+    },
+    {
+      key: "warehouse",
+      label: "Warehouse",
+      sortable: true,
+      render: (movement) => movement.destinationWarehouse?.name ?? movement.sourceWarehouse?.name ?? "N/A",
+    },
+  ];
+
   return (
-    <AppShell title="Inventory movements" description="Audit every stock change across warehouses and products.">
+    <>
       <PageHeader
         title="Inventory flow"
         description="Operational stock movement ledger."
@@ -130,46 +176,12 @@ export function InventoryClientPage({
           ) : error ? (
             <EmptyState title="Unable to load inventory movements" description={error} icon={<Boxes className="h-6 w-6" />} />
           ) : movements?.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Warehouse</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {movements.map((movement) => (
-                  <TableRow key={movement.id}>
-                    <TableCell>
-                      <div className="flex items-start gap-3">
-                        <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
-                          {movement.type === "IN" ? (
-                            <TrendingUp className="h-[18px] w-[18px] stroke-[1.9]" />
-                          ) : movement.type === "OUT" ? (
-                            <TrendingDown className="h-[18px] w-[18px] stroke-[1.9]" />
-                          ) : (
-                            <ArrowRightLeft className="h-[18px] w-[18px] stroke-[1.9]" />
-                          )}
-                        </span>
-                        <div>
-                          <div className="font-medium text-foreground">{movement.product.name}</div>
-                          <div className="text-xs text-muted-foreground">{movement.product.sku}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={movement.type === "IN" ? "success" : movement.type === "OUT" ? "danger" : "info"}>
-                        {movement.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="tabular-nums">{movement.quantity}</TableCell>
-                    <TableCell>{movement.destinationWarehouse?.name ?? movement.sourceWarehouse?.name ?? "N/A"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              data={movements}
+              columns={movementColumns}
+              keyExtractor={(movement) => movement.id}
+              emptyMessage="No movements recorded"
+            />
           ) : (
             <EmptyState
               title="No movements recorded"
@@ -179,6 +191,6 @@ export function InventoryClientPage({
           )}
         </CardContent>
       </Card>
-    </AppShell>
+    </>
   );
 }

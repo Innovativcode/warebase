@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
 import { LottiePlayer } from "@/components/media/lottie-player";
 import { WarebaseLogo } from "@/components/brand/warebase-logo";
+import { SessionLoader } from "@/components/loader/session-loader";
+import { WarebaseLoader } from "@/components/loader/warebase-loader";
 import shoppingAnimation from "@/assets/lottie/shopping.json";
 
 const loginSchema = z.object({
@@ -37,6 +39,7 @@ type LoginClientPageProps = {
 export function LoginClientPage({ nextRoute }: LoginClientPageProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [showSessionLoader, setShowSessionLoader] = useState(false);
 
   const safeNextRoute = getSafeRedirect(nextRoute ?? null);
 
@@ -53,15 +56,18 @@ export function LoginClientPage({ nextRoute }: LoginClientPageProps) {
         body: JSON.stringify(values),
       });
       toast.success("Signed in successfully");
-      router.replace(safeNextRoute);
-      router.refresh();
+      setShowSessionLoader(true);
+      setTimeout(() => {
+        router.replace(safeNextRoute);
+      }, 4600);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to sign in right now");
     }
   });
 
   return (
-    <AuthShell
+    <>
+      <AuthShell
       visual={
         <div className="space-y-6 px-2 py-4 text-slate-950">
           <WarebaseLogo />
@@ -133,7 +139,13 @@ export function LoginClientPage({ nextRoute }: LoginClientPageProps) {
           </div>
 
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
+            {form.formState.isSubmitting ? (
+              <span className="inline-flex items-center justify-center">
+                <WarebaseLoader variant="compact" className="warebase-loader--on-dark" />
+              </span>
+            ) : (
+              "Sign in"
+            )}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
@@ -144,6 +156,8 @@ export function LoginClientPage({ nextRoute }: LoginClientPageProps) {
           </p>
         </form>
       </div>
-    </AuthShell>
+      </AuthShell>
+      <SessionLoader mode="login" visible={showSessionLoader} />
+    </>
   );
 }

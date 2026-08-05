@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { DashboardClientPage } from "@/components/dashboard/dashboard-client-page";
 import { useDashboardSummary } from "@/hooks/use-dashboard-summary";
 import { useRealtimeEvent } from "@/hooks/use-realtime";
+import { PermissionGate } from "@/components/auth/permission-gate";
 
 export default function DashboardPage() {
   const { data, loading, error, refetch } = useDashboardSummary();
@@ -20,5 +21,9 @@ export default function DashboardPage() {
   useRealtimeEvent("approval:created", refresh);
   useRealtimeEvent("approval:reviewed", refresh);
 
-  return <DashboardClientPage summary={data?.data ?? null} loading={loading} error={error} />;
+  return (
+    <PermissionGate permission="read">
+      <DashboardClientPage summary={data?.data ?? null} loading={loading} error={error} />
+    </PermissionGate>
+  );
 }

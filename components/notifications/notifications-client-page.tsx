@@ -1,12 +1,11 @@
 "use client";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
 import { EmptyState } from "@/components/layout/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type Column } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import type { NotificationRecord } from "@/lib/types";
@@ -52,8 +51,87 @@ export function NotificationsClientPage() {
     }
   };
 
+  const notificationColumns: Column<NotificationRecord>[] = [
+    {
+      key: "title",
+      label: "Notification",
+      sortable: true,
+      render: (notification) => {
+        const Icon = iconByTitle(notification.title);
+        return (
+          <button
+            type="button"
+            className="flex items-start gap-3 text-left transition-colors hover:text-foreground"
+            onClick={async () => {
+              await markRead(notification);
+              if (notification.href) {
+                router.push(notification.href);
+              }
+            }}
+          >
+            <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
+              <Icon className="h-[18px] w-[18px] stroke-[1.9]" />
+            </span>
+            <div>
+              <div className="font-medium text-foreground">{notification.title}</div>
+              <div className="text-xs text-muted-foreground">{notification.body}</div>
+            </div>
+          </button>
+        );
+      },
+    },
+    {
+      key: "isRead",
+      label: "Status",
+      sortable: true,
+      render: (notification) => (
+        <Badge variant={notification.isRead ? "secondary" : "warning"}>
+          {notification.isRead ? "Read" : "Unread"}
+        </Badge>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Created",
+      sortable: true,
+      render: (notification) => (
+        <span className="text-sm text-muted-foreground">{new Date(notification.createdAt).toLocaleString()}</span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      className: "text-right",
+      render: (notification) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              await markRead(notification);
+            }}
+            disabled={notification.isRead}
+          >
+            Mark read
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (notification.href) {
+                router.push(notification.href);
+              }
+            }}
+          >
+            Open
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <AppShell title="Notifications" description="Follow alerts, approvals, and operational updates in one inbox.">
+    <>
       <PageHeroPanel
         badge="Operational inbox"
         title="Notifications"
@@ -85,76 +163,12 @@ export function NotificationsClientPage() {
           ) : error ? (
             <EmptyState title="Unable to load notifications" description={error} icon={<Bell className="h-6 w-6" />} />
           ) : notifications.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Notification</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {notifications.map((notification) => {
-                  const Icon = iconByTitle(notification.title);
-                  return (
-                    <TableRow key={notification.id}>
-                      <TableCell>
-                        <button
-                          type="button"
-                          className="flex items-start gap-3 text-left transition-colors hover:text-foreground"
-                          onClick={async () => {
-                            await markRead(notification);
-                            if (notification.href) {
-                              router.push(notification.href);
-                            }
-                          }}
-                        >
-                          <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
-                            <Icon className="h-[18px] w-[18px] stroke-[1.9]" />
-                          </span>
-                          <div>
-                            <div className="font-medium text-foreground">{notification.title}</div>
-                            <div className="text-xs text-muted-foreground">{notification.body}</div>
-                          </div>
-                        </button>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={notification.isRead ? "secondary" : "warning"}>
-                          {notification.isRead ? "Read" : "Unread"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{new Date(notification.createdAt).toLocaleString()}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              await markRead(notification);
-                            }}
-                            disabled={notification.isRead}
-                          >
-                            Mark read
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              if (notification.href) {
-                                router.push(notification.href);
-                              }
-                            }}
-                          >
-                            Open
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <DataTable
+              data={notifications}
+              columns={notificationColumns}
+              keyExtractor={(notification) => notification.id}
+              emptyMessage="No notifications"
+            />
           ) : (
             <EmptyState
               title="No notifications"
@@ -164,6 +178,6 @@ export function NotificationsClientPage() {
           )}
         </CardContent>
       </Card>
-    </AppShell>
+    </>
   );
 }

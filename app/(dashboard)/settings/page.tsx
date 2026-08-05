@@ -6,6 +6,7 @@ import { UserDialog } from "@/components/forms/user-dialog";
 import { useAuditLogs } from "@/hooks/use-audit-logs";
 import { useUsers } from "@/hooks/use-users";
 import type { UserRecord } from "@/lib/types";
+import { PermissionGate } from "@/components/auth/permission-gate";
 
 export default function SettingsPage() {
   const users = useUsers();
@@ -14,7 +15,7 @@ export default function SettingsPage() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <>
+    <PermissionGate permission="users:manage">
       <SettingsClientPage
         users={users.data?.data ?? null}
         auditLogs={auditLogs.data?.data ?? null}
@@ -52,6 +53,6 @@ export default function SettingsPage() {
           setCreating(false);
         }}
       />
-    </>
+    </PermissionGate>
   );
 }

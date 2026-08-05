@@ -3,14 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
 import { EmptyState } from "@/components/layout/empty-state";
 import { StatCard } from "@/components/layout/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type Column } from "@/components/ui/data-table";
 import { ApprovalReviewSheet } from "@/components/approvals/approval-review-sheet";
 import { InlineLoader } from "@/components/loader/warebase-loader";
 import { apiFetch } from "@/lib/api";
@@ -105,8 +104,94 @@ export function ApprovalsClientPage() {
     }
   };
 
+  const approvalColumns: Column<ApprovalRecord>[] = [
+    {
+      key: "title",
+      label: "Request",
+      sortable: true,
+      render: (approval) => {
+        const TypeIcon = typeIcon(approval.type);
+        return (
+          <button
+            type="button"
+            onClick={() => openApproval(approval)}
+            className="flex items-start gap-3 text-left transition-colors hover:text-foreground"
+          >
+            <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
+              <TypeIcon className="h-[18px] w-[18px] stroke-[1.9]" />
+            </span>
+            <div>
+              <div className="font-medium text-foreground">{approval.title}</div>
+              <div className="text-xs text-muted-foreground">{approval.entity}</div>
+            </div>
+          </button>
+        );
+      },
+    },
+    {
+      key: "requestedBy",
+      label: "Requested by",
+      sortable: true,
+      render: (approval) => (
+        <>
+          <div className="text-sm text-foreground">{approval.requestedBy?.name ?? "System"}</div>
+          <div className="text-xs text-muted-foreground">{approval.requestedBy?.role ?? "Unknown role"}</div>
+        </>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (approval) => {
+        const StatusIcon = statusIcon(approval.status);
+        return (
+          <Badge
+            variant={
+              approval.status === "PENDING"
+                ? "warning"
+                : approval.status === "APPROVED"
+                  ? "success"
+                  : approval.status === "REJECTED"
+                    ? "danger"
+                    : "info"
+            }
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <StatusIcon className="h-3.5 w-3.5" />
+              {approval.status}
+            </span>
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "requestedAt",
+      label: "Requested",
+      sortable: true,
+      render: (approval) => (
+        <span className="text-sm text-muted-foreground">{new Date(approval.requestedAt).toLocaleString()}</span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      className: "text-right",
+      render: (approval) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => router.push(`/approvals/${approval.id}`)}>
+            Details
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => openApproval(approval)}>
+            Review
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <AppShell title="Approvals" description="Review purchase orders, stock moves, and cost changes that need authorization.">
+    <>
       <PageHeroPanel
         badge="Governance"
         title="Approval center"
@@ -138,75 +223,12 @@ export function ApprovalsClientPage() {
           ) : error ? (
             <EmptyState title="Unable to load approvals" description={error} icon={<ShieldCheck className="h-6 w-6" />} />
           ) : approvals.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Request</TableHead>
-                  <TableHead>Requested by</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Requested</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {approvals.map((approval) => {
-                  const TypeIcon = typeIcon(approval.type);
-                  const StatusIcon = statusIcon(approval.status);
-                  return (
-                    <TableRow key={approval.id}>
-                      <TableCell>
-                        <button
-                          type="button"
-                          onClick={() => openApproval(approval)}
-                          className="flex items-start gap-3 text-left transition-colors hover:text-foreground"
-                        >
-                          <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-border/70 bg-background text-muted-foreground/80">
-                            <TypeIcon className="h-[18px] w-[18px] stroke-[1.9]" />
-                          </span>
-                          <div>
-                            <div className="font-medium text-foreground">{approval.title}</div>
-                            <div className="text-xs text-muted-foreground">{approval.entity}</div>
-                          </div>
-                        </button>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-foreground">{approval.requestedBy?.name ?? "System"}</div>
-                        <div className="text-xs text-muted-foreground">{approval.requestedBy?.role ?? "Unknown role"}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            approval.status === "PENDING"
-                              ? "warning"
-                              : approval.status === "APPROVED"
-                                ? "success"
-                                : approval.status === "REJECTED"
-                                  ? "danger"
-                                  : "info"
-                          }
-                        >
-                          <span className="inline-flex items-center gap-1.5">
-                            <StatusIcon className="h-3.5 w-3.5" />
-                            {approval.status}
-                          </span>
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{new Date(approval.requestedAt).toLocaleString()}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => router.push(`/approvals/${approval.id}`)}>
-                            Details
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => openApproval(approval)}>
-                            Review
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <DataTable
+              data={approvals}
+              columns={approvalColumns}
+              keyExtractor={(approval) => approval.id}
+              emptyMessage="No approvals waiting"
+            />
           ) : (
             <EmptyState
               title="No approvals waiting"
@@ -223,6 +245,6 @@ export function ApprovalsClientPage() {
         onOpenChange={setSheetOpen}
         onDecision={handleDecision}
       />
-    </AppShell>
+    </>
   );
 }

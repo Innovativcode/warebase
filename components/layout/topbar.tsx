@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { CircleHelp, LogOut, Search, Plus, User2, Settings2, Keyboard, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { getPageMeta } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { GlobalCommandMenu } from "@/components/layout/global-command-menu";
@@ -22,12 +23,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type TopbarProps = {
-  title: string;
+  title?: string;
   description?: string;
 };
 
 export function Topbar({ title, description }: TopbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const pageMeta = getPageMeta(pathname);
   const { data } = useCurrentUser();
   const [commandOpen, setCommandOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -41,7 +44,6 @@ export function Topbar({ title, description }: TopbarProps) {
     }
     setLogoutOpen(false);
     router.push("/login");
-    router.refresh();
   };
 
   return (
@@ -52,8 +54,8 @@ export function Topbar({ title, description }: TopbarProps) {
           <MobileNav />
 
           <div className="min-w-0 flex-1">
-            <h1 className="text-[1.28rem] font-semibold tracking-tight text-foreground sm:text-[1.35rem]">{title}</h1>
-            {description ? <p className="mt-1 max-w-3xl text-sm leading-5 text-muted-foreground">{description}</p> : null}
+            <h1 className="text-[1.28rem] font-semibold tracking-tight text-foreground sm:text-[1.35rem]">{title ?? pageMeta.title}</h1>
+            {description ?? pageMeta.description ? <p className="mt-1 max-w-3xl text-sm leading-5 text-muted-foreground">{(description ?? pageMeta.description) ?? ""}</p> : null}
           </div>
 
           <div className="hidden items-center gap-2 xl:flex">

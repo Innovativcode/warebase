@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeroPanel } from "@/components/layout/page-hero-panel";
 import { EmptyState } from "@/components/layout/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,7 +74,7 @@ export function ApprovalDetailClientPage({ id }: ApprovalDetailClientPageProps) 
   };
 
   return (
-    <AppShell title="Approval detail" description="Review a single operational request in full context.">
+    <>
       <PageHeroPanel
         badge="Governance"
         title={approval ? approval.title : "Approval detail"}
@@ -218,6 +217,6 @@ export function ApprovalDetailClientPage({ id }: ApprovalDetailClientPageProps) 
       ) : (
         <EmptyState title="Approval not found" description="The requested approval record could not be located." icon={<ShieldCheck className="h-6 w-6" />} />
       )}
-    </AppShell>
+    </>
   );
 }

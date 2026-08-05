@@ -6,7 +6,6 @@ import { BinaryBitmap, HybridBinarizer, MultiFormatReader, RGBLuminanceSource } 
 import { toast } from "sonner";
 import { apiFetch, ApiClientError, restockProduct } from "@/lib/api";
 import type { ApiResult } from "@/lib/types";
-import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -285,7 +284,7 @@ export function BarcodeScanner() {
   };
 
   return (
-    <AppShell title="Barcode scanner" description="Scan a barcode or enter it manually to resolve a product directly from the database.">
+    <>
       <Card className="border-border/70">
         <CardHeader className="pb-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -547,6 +546,6 @@ export function BarcodeScanner() {
           </div>
         </CardContent>
       </Card>
-    </AppShell>
+    </>
   );
 }

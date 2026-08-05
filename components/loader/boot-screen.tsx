@@ -5,9 +5,11 @@ import { cn } from "@/lib/cn";
 import { WarebaseLoader } from "@/components/loader/warebase-loader";
 
 const MESSAGES = [
+  "Setting up your dashboard…",
   "Loading stock levels…",
   "Syncing shelves…",
   "Balancing the base…",
+  "Almost there…",
 ];
 
 type WarebaseBootScreenProps = {

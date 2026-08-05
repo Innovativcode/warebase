@@ -198,6 +198,22 @@ body {
   height: 20px;
 }
 
+.warebase-loader--on-dark .warebase-loader__bar:nth-child(1) {
+  background: #ffffff;
+}
+
+.warebase-loader--on-dark .warebase-loader__bar:nth-child(2) {
+  background: #f0b15c;
+}
+
+.warebase-loader--on-dark .warebase-loader__bar:nth-child(3) {
+  background: #ffffff;
+}
+
+.warebase-loader--on-dark .warebase-loader__bar {
+  box-shadow: none;
+}
+
 /* ===== WareBase boot screen ===== */
 
 .boot-screen {

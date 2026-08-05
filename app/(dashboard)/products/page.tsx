@@ -8,6 +8,7 @@ import { useProducts } from "@/hooks/use-products";
 import { useSuppliers } from "@/hooks/use-suppliers";
 import { apiFetch } from "@/lib/api";
 import type { ProductRecord } from "@/lib/types";
+import { PermissionGate } from "@/components/auth/permission-gate";
 
 export default function ProductsPage() {
   const products = useProducts();
@@ -26,7 +27,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <>
+    <PermissionGate permission="read">
       <ProductsClientPage
         products={products.data?.data ?? null}
         loading={products.loading}
@@ -49,6 +50,6 @@ export default function ProductsPage() {
         onOpenChange={setOpen}
         onSaved={products.refetch}
       />
-    </>
+    </PermissionGate>
   );
 }
