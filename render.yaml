@@ -20,5 +20,5 @@ services:
       - key: COOKIE_NAME
         value: inventory_session
       - key: CORS_ORIGIN
-        value: https://warebase.store,https://www.warebase.store,https://inventory-ka6vo1nej-adespscientists-projects.vercel.app
+        value: https://warebase.store,https://www.warebase.store,https://api.warebase.store,https://inventory-ka6vo1nej-adespscientists-projects.vercel.app
     healthCheckPath: /health
