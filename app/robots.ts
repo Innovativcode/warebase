@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = "https://warebase.getcognix.shop";
+const SITE_URL = "https://warebase.store";
 
 export default function robots(): MetadataRoute.Robots {
   return {

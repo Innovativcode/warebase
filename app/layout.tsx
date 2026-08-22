@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { Toaster } from "sonner";
 
-const SITE_URL = "https://warebase.getcognix.shop";
+const SITE_URL = "https://warebase.store";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
