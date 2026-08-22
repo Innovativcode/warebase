@@ -14,5 +14,5 @@
     }
   },
   "regions": ["iad1"],
-  "alias": ["warebase.getcognix.shop", "staging-warebase.getcognix.shop"]
+  "alias": ["warebase.store", "www.warebase.store"]
 }
